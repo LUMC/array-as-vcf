@@ -7,7 +7,7 @@ test_variation.py
 :license: MIT
 """
 import pytest
-from aav.variation import Variant, InfoField, InfoFieldNumber
+from aav.variation import Variant, InfoField, InfoFieldNumber, Genotype
 
 
 info_test_data = [
@@ -87,6 +87,46 @@ vcf_test_data = [
              InfoField("BAZ", True, InfoFieldNumber.one, True)
          ]],
         "1\t100\trsUnknown\tA\tT,C\t500\tDN1,DN2\tFOO=bar;BAZ"
+    ),
+    (
+        ["1", 100, "A", ["T,C"], 500, ["DN1", "DN2"], "rsUnknown",
+         [
+             InfoField("FOO", "bar", InfoFieldNumber.one),
+             InfoField("BAZ", True, InfoFieldNumber.one, True)
+         ],
+         Genotype.hom_ref
+         ],
+        "1\t100\trsUnknown\tA\tT,C\t500\tDN1,DN2\tFOO=bar;BAZ\tGT\t0/0"
+    ),
+    (
+        ["1", 100, "A", ["T,C"], 500, ["DN1", "DN2"], "rsUnknown",
+         [
+             InfoField("FOO", "bar", InfoFieldNumber.one),
+             InfoField("BAZ", True, InfoFieldNumber.one, True)
+         ],
+         Genotype.het
+         ],
+        "1\t100\trsUnknown\tA\tT,C\t500\tDN1,DN2\tFOO=bar;BAZ\tGT\t0/1"
+    ),
+    (
+        ["1", 100, "A", ["T,C"], 500, ["DN1", "DN2"], "rsUnknown",
+         [
+             InfoField("FOO", "bar", InfoFieldNumber.one),
+             InfoField("BAZ", True, InfoFieldNumber.one, True)
+         ],
+         Genotype.hom_alt
+         ],
+        "1\t100\trsUnknown\tA\tT,C\t500\tDN1,DN2\tFOO=bar;BAZ\tGT\t1/1"
+    ),
+    (
+        ["1", 100, "A", ["T,C"], 500, ["DN1", "DN2"], "rsUnknown",
+         [
+             InfoField("FOO", "bar", InfoFieldNumber.one),
+             InfoField("BAZ", True, InfoFieldNumber.one, True)
+         ],
+         Genotype.unknown
+         ],
+        "1\t100\trsUnknown\tA\tT,C\t500\tDN1,DN2\tFOO=bar;BAZ\tGT\t./."
     )
 ]
 

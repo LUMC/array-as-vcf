@@ -18,6 +18,13 @@ class InfoFieldNumber(enum.Enum):
     unknown = "."
 
 
+class Genotype(enum.Enum):
+    hom_ref = "0/0"
+    het = "0/1"
+    hom_alt = "1/1"
+    unknown = "./."
+
+
 class InfoField(object):
     """Info field"""
 
@@ -46,12 +53,14 @@ class Variant(object):
     """
     Representations of a variant
 
-    TODO: add info and genotypes
+    This currently only supports _one_ sample,
+    with _one_ FORMAT field entry (GT).
     """
     def __init__(self, chrom: str, pos: int, ref: str, alt: List[str],
                  qual: float, filters: List[str] = list(),
                  id: Optional[str] = None,
-                 info_fields: List[InfoField] = list()):
+                 info_fields: List[InfoField] = list(),
+                 genotype: Optional[Genotype] = None):
         self.chrom = chrom
         self.pos = pos
         if id is not None:
@@ -63,6 +72,7 @@ class Variant(object):
         self.alt = alt
         self.filters = filters
         self.info_fields = info_fields
+        self.genotype = genotype
 
     @property
     def vcf_line(self) -> str:
@@ -77,5 +87,8 @@ class Variant(object):
                 str(x) for x in self.info_fields if str(x) != ""
             )
             fmt += "\t{0}".format(info_str)
+
+        if self.genotype is not None:
+            fmt += "\tGT\t{0}".format(self.genotype.value)
 
         return fmt
