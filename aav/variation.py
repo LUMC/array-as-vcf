@@ -34,6 +34,7 @@ class Variant(object):
         fmt = "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format(
             self.chrom, self.pos, self.id,
             self.ref, ",".join(self.alt),
-            self.qual, ",".join(self.filters)
+            self.qual,
+            ",".join(self.filters) if len(self.filters) > 0 else "PASS"
         )
         return fmt
