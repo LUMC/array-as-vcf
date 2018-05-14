@@ -43,3 +43,32 @@ def query_ensembl(rs_id: str, build: str) -> Tuple[str, str]:
 
     j = response.json()
     return j.get("ancestral_allele", ""), j.get("minor_allele", "")
+
+
+class RSLookup(object):
+    """
+    Object to look up ref and alt positions for rs ids
+    Only performs requests to ensembl when rs ids has not been
+    accessed before.
+
+    Behaves like dict.
+    """
+
+    def __init__(self, build: str,
+                 init_d: dict = None):
+        """
+        Create lookup table.
+        :param build: genome build. Either GRCH37 or GRCH38
+        :param init_d: Optional dict with known rs ids
+        """
+        self.build = build
+        if init_d:
+            self.__rsids = init_d
+        else:
+            self.__rsids = {}
+
+    def __getitem__(self, rs_id: str):
+        if rs_id not in self.__rsids:
+            self.__rsids[rs_id] = query_ensembl(rs_id, self.build)
+
+        return self.__rsids[rs_id]

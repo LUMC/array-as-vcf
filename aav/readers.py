@@ -9,7 +9,14 @@ aav.readers
 from pathlib import Path
 from typing import Optional
 
+from werkzeug.exceptions import NotFound
+
 from .variation import Variant, InfoFieldNumber, InfoField, Genotype
+from .lookup import RSLookup
+
+
+GRCH37_LOOKUP = RSLookup("GRCh37")
+GRCH38_LOOKUP = RSLookup("GRCh38")
 
 
 class Reader(object):
@@ -46,10 +53,18 @@ class AffyReader(Reader):
     """
 
     def __init__(self, path: Path, qual: int = 100,
-                 prefix_chr: Optional[str] = None):
+                 prefix_chr: Optional[str] = None,
+                 build: str = "GRCh37"):
         super().__init__(path, n_header_lines=1)
         self.qual = qual
         self.prefix_chr = prefix_chr
+
+        if build.upper() == "GRCH37":
+            self.lookup_table = GRCH37_LOOKUP
+        elif build.upper() == "GRCH38":
+            self.lookup_table = GRCH38_LOOKUP
+        else:
+            raise NotImplementedError()
 
     def __next__(self) -> Variant:
         line = next(self.handle).strip().split("\t")
@@ -66,8 +81,18 @@ class AffyReader(Reader):
             InfoField("LOH_likelihood", line[8], InfoFieldNumber.one)
         ]
 
-        # TODO: get ref and alt alleles!!
-        return Variant(chrom=chrom, pos=pos, ref="NA", alt=["NA"],
+        try:
+            ref, alt = self.lookup_table[rs_id]
+        except NotFound:
+            ref = '.'
+            alt = '.'
+
+        if ref is None:
+            ref = '.'
+        if alt is None:
+            alt = '.'
+
+        return Variant(chrom=chrom, pos=pos, ref=ref, alt=alt,
                        qual=self.qual, id=rs_id, info_fields=infos,
                        genotype=gt)
 
