@@ -29,7 +29,7 @@ def query_ensembl(rs_id: str, build: str) -> Tuple[str, str]:
 
     response = requests.get(url)
 
-    if not 200 < response.status_code < 300:
+    if not 200 <= response.status_code < 300:
         try:
             error = response.json().get('error')
         except ValueError:
