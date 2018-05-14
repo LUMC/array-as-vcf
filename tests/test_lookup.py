@@ -7,10 +7,21 @@ test_lookup.py
 :license: MIT
 """
 
-from aav.lookup import query_ensembl
+from aav.lookup import query_ensembl, RSLookup
+from datetime import datetime
 
 import pytest
 from werkzeug.exceptions import NotFound
+
+
+@pytest.fixture
+def grch37_lookup():
+    return RSLookup("GRCh37")
+
+
+@pytest.fixture
+def grch38_lookup():
+    return RSLookup("GRCh38")
 
 
 def test_query_ensembl_known_rsid_grch38():
@@ -30,3 +41,47 @@ def test_unknown_rsid():
     with pytest.raises(NotFound) as exc:
         query_ensembl("rs5611644432", "GRCh37")
         assert "rsID not found for human" in str(exc)
+
+
+def test_lookup_succeed_grch37(grch37_lookup):
+    assert grch37_lookup['rs56116432'] == ("C", "T")
+
+
+def test_lookup_fail_grch37(grch37_lookup):
+    with pytest.raises(NotFound):
+        grch37_lookup['rs5611644432']
+
+
+def test_lookup_succeed_grhc38(grch38_lookup):
+    assert grch38_lookup['rs56116432'] == ("C", "T")
+
+
+def test_lookup_fail_grch38(grch38_lookup):
+    with pytest.raises(NotFound):
+        grch38_lookup['rs5611644432']
+
+
+def test_lookup_speed_grch37(grch37_lookup):
+    now = datetime.utcnow()
+    _ = grch37_lookup['rs56']
+    after = datetime.utcnow()
+    init_delta = after - now
+
+    _ = grch37_lookup['rs56']  # noqa
+    after2 = datetime.utcnow()
+    second_delta = after2 - after
+
+    assert second_delta < init_delta
+
+
+def test_lookup_speed_grch38(grch38_lookup):
+    now = datetime.utcnow()
+    _ = grch38_lookup['rs56']
+    after = datetime.utcnow()
+    init_delta = after - now
+
+    _ = grch38_lookup['rs56']  # noqa
+    after2 = datetime.utcnow()
+    second_delta = after2 - after
+
+    assert second_delta < init_delta
