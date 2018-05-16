@@ -25,11 +25,19 @@ def grch38_lookup():
 
 
 def test_query_ensembl_known_rsid_grch38():
-    assert query_ensembl("rs56116432", "GRCh38") == ("C", "T")
+    assert query_ensembl("rs56116432", "GRCh38") == ("C", ["T"])
 
 
 def test_query_ensembl_known_rsid_grch37():
-    assert query_ensembl("rs56116432", "GRCh37") == ("C", "T")
+    assert query_ensembl("rs56116432", "GRCh37") == ("C", ["T"])
+
+
+def test_query_multi_alt_grch38():
+    assert query_ensembl("rs60", "GRCh38") == ("A", ["G", "T"])
+
+
+def test_query_multi_alt_grch37():
+    assert query_ensembl("rs60", "GRCh37") == ("A", ["G", "T"])
 
 
 def test_query_ensembl_unknown_build():
@@ -44,7 +52,7 @@ def test_unknown_rsid():
 
 
 def test_lookup_succeed_grch37(grch37_lookup):
-    assert grch37_lookup['rs56116432'] == ("C", "T")
+    assert grch37_lookup['rs56116432'] == ("C", ["T"])
 
 
 def test_lookup_fail_grch37(grch37_lookup):
@@ -53,7 +61,7 @@ def test_lookup_fail_grch37(grch37_lookup):
 
 
 def test_lookup_succeed_grhc38(grch38_lookup):
-    assert grch38_lookup['rs56116432'] == ("C", "T")
+    assert grch38_lookup['rs56116432'] == ("C", ["T"])
 
 
 def test_lookup_fail_grch38(grch38_lookup):

@@ -8,10 +8,10 @@ aav.lookup
 """
 import requests
 from werkzeug.exceptions import NotFound
-from typing import Tuple
+from typing import Tuple, List
 
 
-def query_ensembl(rs_id: str, build: str) -> Tuple[str, str]:
+def query_ensembl(rs_id: str, build: str) -> Tuple[str, List[str]]:
     """Get ref and alt alleles for an rs id from ensembl"""
 
     if build.upper() == "GRCH38":
@@ -42,7 +42,13 @@ def query_ensembl(rs_id: str, build: str) -> Tuple[str, str]:
         ))
 
     j = response.json()
-    return j.get("ancestral_allele", ""), j.get("minor_allele", "")
+    allele_string = j.get("mappings", [{}])[0].get("allele_string", "")
+    parts = allele_string.split("/")
+    ref = parts[0]
+    if len(parts) > 0:
+        return ref, parts[1:]
+    else:
+        return ref, []
 
 
 class RSLookup(object):
