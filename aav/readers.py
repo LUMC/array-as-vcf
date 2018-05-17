@@ -52,19 +52,14 @@ class AffyReader(Reader):
     3: hom_alt
     """
 
-    def __init__(self, path: Path, qual: int = 100,
-                 prefix_chr: Optional[str] = None,
-                 build: str = "GRCh37"):
+    def __init__(self, path: Path,
+                 lookup_table: RSLookup,
+                 qual: int = 100,
+                 prefix_chr: Optional[str] = None):
         super().__init__(path, n_header_lines=1)
         self.qual = qual
         self.prefix_chr = prefix_chr
-
-        if build.upper() == "GRCH37":
-            self.lookup_table = GRCH37_LOOKUP
-        elif build.upper() == "GRCH38":
-            self.lookup_table = GRCH38_LOOKUP
-        else:
-            raise NotImplementedError()
+        self.lookup_table = lookup_table
 
     def __next__(self) -> Variant:
         line = next(self.handle).strip().split("\t")

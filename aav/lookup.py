@@ -10,6 +10,8 @@ import requests
 from werkzeug.exceptions import NotFound
 from typing import Tuple, List
 
+import json
+
 
 def query_ensembl(rs_id: str, build: str,
                   timeout: float = 120) -> Tuple[str, List[str]]:
@@ -99,3 +101,7 @@ class RSLookup(object):
             except requests.Timeout:
                 continue
         raise RuntimeError("Too many tries for request")
+
+    def dumps(self):
+        """Dump table to json-formatted string"""
+        return json.dumps(self.__rsids)
