@@ -16,7 +16,9 @@ def comma_float(val: str) -> float:
     """
     if "," in val and "." not in val:
         return float(val.replace(",", "."))
-    elif "." in val:
+    elif "." in val and "," not in val:
+        return float(val)
+    elif "," not in val and "." not in val:
         return float(val)
     else:
         raise ValueError("Cannot parse string with both commas and dots")
