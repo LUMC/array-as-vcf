@@ -46,12 +46,15 @@ def query_ensembl(rs_id: str, build: str,
         else:
             if "not found for human" in error:
                 raise NotFound("rsID not found for human")
-        raise ValueError("Request failed with code {0}".format(
+        raise requests.HTTPError("Request failed with code {0}".format(
             response.status_code
         ))
 
     j = response.json()
-    allele_string = j.get("mappings", [{}])[0].get("allele_string", "")
+    try:
+        allele_string = j.get("mappings", [{}])[0].get("allele_string", "")
+    except IndexError:  # mapping may be `mapping: []` when it does not map to genome # noqa
+        raise NotFound("rsID does not map to genome")
     parts = allele_string.split("/")
     ref = parts[0]
     if len(parts) > 0:
@@ -98,9 +101,9 @@ class RSLookup(object):
         for _ in range(self.request_tries):
             try:
                 return query_ensembl(rs_id, self.build, self.request_timeout)
-            except requests.Timeout:
+            except (requests.Timeout, requests.HTTPError):
                 continue
-        raise RuntimeError("Too many tries for request")
+        raise ValueError("Too many tries for request")
 
     def dumps(self):
         """Dump table to json-formatted string"""

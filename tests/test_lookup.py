@@ -103,11 +103,11 @@ def test_lookup_speed_grch38(grch38_lookup):
 
 def test_lookup_timeout():
     look = RSLookup(build="GRCh37", request_timeout=0.0001)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         look['rs56']
 
 
 def test_lookup_timeout_tries():
     look = RSLookup(build="GRCh37", request_timeout=0.0001, request_tries=5)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         look['r56']
