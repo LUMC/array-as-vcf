@@ -129,22 +129,26 @@ class CytoScanReader(Reader):
     """
 
     def __init__(self, path,
+                 lookup_table: RSLookup,
                  prefix_chr: Optional[str] = None):
         super().__init__(path, 12)
         self.prefix_chr = prefix_chr
+        self.lookup_table = lookup_table
 
     def __next__(self) -> Variant:
         line = next(self.handle).strip().split("\t")
         chrom = self.get_chrom(line[7])
         pos = int(line[8])
+        id = line[6]
+
         try:
-            ref, alt = list(line[5])
-        except ValueError:
+            ref, alt = self.lookup_table[id]
+        except NotFound:
             ref = "."
             alt = "."
+
         gt = self.get_genotype(line[1])
         qual = self.get_qual(float(line[2]))
-        id = line[6]
 
         infos = [
             InfoField("Probe_Set_ID", line[0], InfoFieldNumber.one),
