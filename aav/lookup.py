@@ -68,13 +68,19 @@ class RSLookup(object):
     """
 
     def __init__(self, build: str,
-                 init_d: dict = None):
+                 init_d: dict = None,
+                 request_timeout: float = 120,
+                 request_tries: int = 1):
         """
         Create lookup table.
         :param build: genome build. Either GRCH37 or GRCH38
         :param init_d: Optional dict with known rs ids
+        :param request_timeout: timeout in seconds for requests
+        :param request_tries: number of tries for a timed-out request
         """
         self.build = build
+        self.request_tries = request_tries
+        self.request_timeout = request_timeout
         if init_d:
             self.__rsids = init_d
         else:
@@ -82,6 +88,14 @@ class RSLookup(object):
 
     def __getitem__(self, rs_id: str):
         if rs_id not in self.__rsids:
-            self.__rsids[rs_id] = query_ensembl(rs_id, self.build)
+            self.__rsids[rs_id] = self._get_ensembl(rs_id)
 
         return self.__rsids[rs_id]
+
+    def _get_ensembl(self, rs_id):
+        for _ in range(self.request_tries):
+            try:
+                return query_ensembl(rs_id, self.build, self.request_timeout)
+            except requests.Timeout:
+                continue
+        raise RuntimeError("Too many tries for request")

@@ -99,3 +99,15 @@ def test_lookup_speed_grch38(grch38_lookup):
     second_delta = after2 - after
 
     assert second_delta < init_delta
+
+
+def test_lookup_timeout():
+    look = RSLookup(build="GRCh37", request_timeout=0.0001)
+    with pytest.raises(RuntimeError):
+        look['rs56']
+
+
+def test_lookup_timeout_tries():
+    look = RSLookup(build="GRCh37", request_timeout=0.0001, request_tries=5)
+    with pytest.raises(RuntimeError):
+        look['r56']
