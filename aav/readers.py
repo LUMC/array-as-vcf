@@ -6,6 +6,7 @@ aav.readers
 :copyright: (c) 2018 Leiden University Medical Center
 :license: MIT
 """
+from math import log10
 from pathlib import Path
 from typing import Optional
 
@@ -28,15 +29,20 @@ class Reader(object):
     def __init__(self, path: Path, n_header_lines: int = 0):
         self.path = path
         self.handle = self.path.open()
+        self.header_lines = []
 
         for _ in range(n_header_lines):
-            next(self.handle)  # discard header lines
+            self.header_lines.append(next(self.handle))
 
     def __next__(self) -> Variant:
         raise NotImplementedError
 
     def __iter__(self):
         return self
+
+    @property
+    def vcf_header(self) -> str:
+        raise NotImplementedError
 
 
 class AffyReader(Reader):
@@ -111,3 +117,60 @@ class AffyReader(Reader):
             return "{0}{1}".format(self.prefix_chr, val)
 
         return val
+
+
+class CytoScanReader(Reader):
+    """
+    Cytoscan files are expected to conform to the following spec
+    They have 12 header lines, with the following columns:
+
+    Probe Set ID    Call Codes      Confidence      Signal A        Signal B        Forward Strand Base Calls       dbSNP RS ID     Chromosome      Chromosomal Position  # noqa
+
+    """
+
+    def __init__(self, path,
+                 prefix_chr: Optional[str] = None):
+        super().__init__(path, 12)
+        self.prefix_chr = prefix_chr
+
+    def __next__(self) -> Variant:
+        line = next(self.handle).strip().split("\t")
+        chrom = self.get_chrom(line[7])
+        pos = int(line[8])
+        try:
+            ref, alt = list(line[5])
+        except ValueError:
+            ref = "."
+            alt = "."
+        gt = self.get_genotype(line[1])
+        qual = self.get_qual(float(line[2]))
+        id = line[6]
+
+        infos = [
+            InfoField("Probe_Set_ID", line[0], InfoFieldNumber.one),
+            InfoField("Signal_A", line[3], InfoFieldNumber.one),
+            InfoField("Signal_B", line[4], InfoFieldNumber.one)
+        ]
+
+        return Variant(chrom=chrom, pos=pos, ref=ref, alt=alt, id=id,
+                       qual=qual, info_fields=infos, genotype=gt)
+
+    def get_genotype(self, call_code: str) -> Genotype:
+        if len(set(call_code)) == 2:
+            return Genotype.het
+        elif call_code.upper() == "AA":
+            return Genotype.hom_ref
+        elif call_code.upper() == "BB":
+            return Genotype.hom_alt
+        else:
+            return Genotype.unknown
+
+    def get_chrom(self, chrom: str) -> str:
+        if self.prefix_chr is None:
+            return chrom
+        return "{0}{1}".format(self.prefix_chr, chrom)
+
+    def get_qual(self, confidence: float) -> float:
+        if confidence == 0:
+            return 0
+        return -10 * log10(confidence)
