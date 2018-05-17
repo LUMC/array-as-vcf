@@ -1,0 +1,15 @@
+# Annotation DB Used: /path/to/annot.db
+# Array Type Name: CytoScan HD Array
+# Array Type Internal Name: CytoScanHD_Array
+# Export GUID: 11111111-1111-1111-1111-111111111111
+# Array Annotation Database NetAffx Build: 33
+# UCSC Genomic Version: hg19
+# NCBI Genomic Version: 37
+# dbSNP Version: 135
+# CHP File: /path/to/file.cyhd.cychp
+# Input Chromosome: All
+# Output Chromosome: All
+Probe Set ID	Call Codes	Confidence	Signal A	Signal B	Forward Strand Base Calls	dbSNP RS ID	Chromosome	Chromosomal Position	
+S-3WRNV	BB	1.1588064E-11	350.31256	1395.7866	GG	rs2340582	1	882803
+S-4GXBG	AA	5.7731597E-15	3946.0908	635.2552	CC	rs3748597	1	888659
+S-3VYOT	AB	0.0	635.8536	748.638	CT	rs6696609	1	903426

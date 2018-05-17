@@ -3,7 +3,7 @@ test_utils.py
 ~~~~~~~~~~~~~
 
 :copyright: (c) 2018 Sander Bollen
-:copyright: (c) Leiden University Medical Center
+:copyright: (c) 2018 Leiden University Medical Center
 
 :license: MIT
 """
