@@ -11,8 +11,15 @@ from werkzeug.exceptions import NotFound
 from typing import Tuple, List
 
 
-def query_ensembl(rs_id: str, build: str) -> Tuple[str, List[str]]:
-    """Get ref and alt alleles for an rs id from ensembl"""
+def query_ensembl(rs_id: str, build: str,
+                  timeout: float = 120) -> Tuple[str, List[str]]:
+    """
+    Get ref and alt alleles for an rs id from ensembl
+
+    :param rs_id: The rsID to query
+    :param build: genome build of interest. Either Grch37 or GRCh38
+    :param timeout: request timeout in seconds (default = 120)
+    """
 
     if build.upper() == "GRCH38":
         url_prefix = "https://"
@@ -27,7 +34,7 @@ def query_ensembl(rs_id: str, build: str) -> Tuple[str, List[str]]:
         "content-type=application/json"
     )
 
-    response = requests.get(url)
+    response = requests.get(url, timeout=timeout)
 
     if not 200 <= response.status_code < 300:
         try:

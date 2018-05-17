@@ -12,6 +12,7 @@ from datetime import datetime
 
 import pytest
 from werkzeug.exceptions import NotFound
+from requests.exceptions import Timeout
 
 
 @pytest.fixture
@@ -49,6 +50,11 @@ def test_unknown_rsid():
     with pytest.raises(NotFound) as exc:
         query_ensembl("rs5611644432", "GRCh37")
         assert "rsID not found for human" in str(exc)
+
+
+def test_timeout():
+    with pytest.raises(Timeout):
+        query_ensembl("rs60", "GRCh37", 0.00001)
 
 
 def test_lookup_succeed_grch37(grch37_lookup):
