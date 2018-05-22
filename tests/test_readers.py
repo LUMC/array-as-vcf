@@ -114,6 +114,25 @@ chrom_test_data = [
     )
 ]
 
+ref_test_data = [
+    (
+        AffyReader(_affy_path, _grch37_lookup),
+        ["T", "A", "T", "T", ".", "."]
+    ),
+    (
+        CytoScanReader(_cytoscan_path, _grch37_lookup),
+        ["A", "T", "C", ".", "."]
+    ),
+    (
+        Lumi317kReader(_lumi_317_path, _grch37_lookup),
+        ["C", "A", "C", "A", ".", "."]
+    ),
+    (
+        Lumi370kReader(_lumi_370_path, _grch37_lookup),
+        ["C", "A", "C", "A", ".", "."]
+    )
+]
+
 autodetect_reader_data = [
     (_lumi_317_path, "Lumi317kReader"),
     (_lumi_370_path, "Lumi370kReader"),
@@ -154,3 +173,9 @@ def test_autodetect_readers(path, class_name):
 def test_reader_chromosomes(reader, chroms):
     found_chroms = [x.chrom for x in reader]
     assert found_chroms == chroms
+
+
+@pytest.mark.parametrize("reader, refs", ref_test_data)
+def test_reader_refs(reader, refs):
+    found_ref = [x.ref for x in reader]
+    assert found_ref == refs
