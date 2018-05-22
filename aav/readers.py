@@ -262,7 +262,7 @@ class Lumi370kReader(LumiReader):
         return line_items[1]
 
 
-class Lumi317Reader(LumiReader):
+class Lumi317kReader(LumiReader):
 
     def get_rs_id(self, line_items: List[str]) -> str:
         return line_items[1]
@@ -284,7 +284,7 @@ def autodetect_reader(path: Path) -> Type[Reader]:
             if i == 0 and "Affymetrix" in line:
                 return AffyReader
             elif i == 0 and line.startswith("Name"):
-                return Lumi317Reader
+                return Lumi317kReader
             elif i == 0 and line.startswith("Chr"):
                 return Lumi370kReader
             elif i == 11 and line.startswith("Probe"):
