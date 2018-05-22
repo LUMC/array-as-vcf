@@ -8,7 +8,7 @@ aav.readers
 """
 from math import log10
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Type
 
 from werkzeug.exceptions import NotFound
 
@@ -269,3 +269,27 @@ class Lumi317Reader(LumiReader):
 
     def get_raw_chrom(self, line_items: List[str]) -> str:
         return line_items[0]
+
+
+def autodetect_reader(path: Path) -> Type[Reader]:
+    """
+    Detect type of reader for a certain array path
+    :param path: instance of Path pointing to path
+    :return: Reader class (NOT instance)
+    :raises: NotImplementedError for unknown types.
+    """
+
+    with path.open() as handle:
+        for i, line in enumerate(handle):
+            if i == 0 and "AffyMetrix" in line:
+                return AffyReader
+            elif i == 0 and line.startswith("Name"):
+                return Lumi317Reader
+            elif i == 0 and line.startswith("Chr"):
+                return Lumi370kReader
+            elif i == 11 and line.startswith("Probe"):
+                return CytoScanReader
+            elif i > 11:
+                raise NotImplementedError
+
+    raise NotImplementedError
