@@ -59,19 +59,57 @@ _grch37_lookup = grch37_lookup()
 genotype_test_data = [
     (
         affy_reader(_grch37_lookup),
-        [Genotype.unknown, Genotype.hom_ref, Genotype.het, Genotype.hom_alt]
+        [Genotype.unknown, Genotype.hom_ref, Genotype.het, Genotype.hom_alt,
+         Genotype.unknown]
     ),
     (
         cytoscan_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_ref, Genotype.het]
+        [Genotype.hom_alt, Genotype.hom_ref, Genotype.het, Genotype.unknown]
     ),
     (
         lumi_317_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_ref, Genotype.het, Genotype.unknown]
+        [Genotype.hom_alt, Genotype.hom_ref, Genotype.het, Genotype.unknown,
+         Genotype.unknown]
     ),
     (
         lumi_370_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_ref, Genotype.het, Genotype.unknown]
+        [Genotype.hom_alt, Genotype.hom_ref, Genotype.het, Genotype.unknown,
+         Genotype.unknown]
+    )
+]
+
+chrom_test_data = [
+    (
+        AffyReader(_affy_path, _grch37_lookup),
+        ["1", "1", "1", "1", "X"]
+    ),
+    (
+        AffyReader(_affy_path, _grch37_lookup, prefix_chr="chr"),
+        ["chr1", "chr1", "chr1", "chr1", "chrX"]
+    ),
+    (
+        CytoScanReader(_cytoscan_path, _grch37_lookup),
+        ["1", "1", "1", "X"]
+    ),
+    (
+        CytoScanReader(_cytoscan_path, _grch37_lookup, prefix_chr="chr"),
+        ["chr1", "chr1", "chr1", "chrX"]
+    ),
+    (
+        Lumi317kReader(_lumi_317_path, _grch37_lookup),
+        ["1", "1", "1", "1", "X"]
+    ),
+    (
+        Lumi317kReader(_lumi_317_path, _grch37_lookup, prefix_chr="chr"),
+        ["chr1", "chr1", "chr1", "chr1", "chrX"]
+    ),
+    (
+        Lumi370kReader(_lumi_370_path, _grch37_lookup),
+        ["1", "1", "1", "1", "X"]
+    ),
+    (
+        Lumi370kReader(_lumi_370_path, _grch37_lookup, prefix_chr="chr"),
+        ["chr1", "chr1", "chr1", "chr1", "chrX"]
     )
 ]
 
@@ -84,19 +122,19 @@ autodetect_reader_data = [
 
 
 def test_affy_reader_amount(affy_reader):
-    assert len(list(affy_reader)) == 4
+    assert len(list(affy_reader)) == 5
 
 
 def test_cytoscan_reader_amount(cytoscan_reader):
-    assert len(list(cytoscan_reader)) == 3
+    assert len(list(cytoscan_reader)) == 4
 
 
 def test_lumi317_reader_amount(lumi_317_reader):
-    assert len(list(lumi_317_reader)) == 4
+    assert len(list(lumi_317_reader)) == 5
 
 
 def test_lumi370_reader_amount(lumi_370_reader):
-    assert len(list(lumi_370_reader)) == 4
+    assert len(list(lumi_370_reader)) == 5
 
 
 @pytest.mark.parametrize("reader, genotypes", genotype_test_data)
@@ -109,3 +147,9 @@ def test_reader_genotypes(reader, genotypes):
 def test_autodetect_readers(path, class_name):
     found_cls = autodetect_reader(path)
     assert found_cls.__name__ == class_name
+
+
+@pytest.mark.parametrize("reader, chroms", chrom_test_data)
+def test_reader_chromosomes(reader, chroms):
+    found_chroms = [x.chrom for x in reader]
+    assert found_chroms == chroms

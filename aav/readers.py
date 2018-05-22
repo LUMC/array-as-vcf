@@ -161,7 +161,7 @@ class CytoScanReader(Reader):
                        qual=qual, info_fields=infos, genotype=gt)
 
     def get_genotype(self, call_code: str) -> Genotype:
-        if len(set(call_code)) == 2:
+        if call_code.upper() == "AB" or call_code.upper() == "BA":
             return Genotype.het
         elif call_code.upper() == "AA":
             return Genotype.hom_ref
@@ -256,19 +256,19 @@ class LumiReader(Reader):
 class Lumi370kReader(LumiReader):
 
     def get_rs_id(self, line_items: List[str]) -> str:
-        return line_items[0]
+        return line_items[1]
 
     def get_raw_chrom(self, line_items: List[str]) -> str:
-        return line_items[1]
+        return line_items[0]
 
 
 class Lumi317kReader(LumiReader):
 
     def get_rs_id(self, line_items: List[str]) -> str:
-        return line_items[1]
+        return line_items[0]
 
     def get_raw_chrom(self, line_items: List[str]) -> str:
-        return line_items[0]
+        return line_items[1]
 
 
 def autodetect_reader(path: Path) -> Type[Reader]:
