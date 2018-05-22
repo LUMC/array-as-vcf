@@ -191,11 +191,11 @@ class LumiReader(Reader):
 
     def __init__(self, path: Path,
                  lookup_table: RSLookup,
-                 chr_prefix: Optional[str] = None,
+                 prefix_chr: Optional[str] = None,
                  qual=100):
         super().__init__(path, n_header_lines=1)
         self.lookup_table = lookup_table
-        self.chr_prefix = chr_prefix
+        self.chr_prefix = prefix_chr
         self.qual = qual
 
     def __next__(self) -> Variant:
@@ -281,7 +281,7 @@ def autodetect_reader(path: Path) -> Type[Reader]:
 
     with path.open() as handle:
         for i, line in enumerate(handle):
-            if i == 0 and "AffyMetrix" in line:
+            if i == 0 and "Affymetrix" in line:
                 return AffyReader
             elif i == 0 and line.startswith("Name"):
                 return Lumi317Reader

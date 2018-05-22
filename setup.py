@@ -25,8 +25,14 @@ setup(
     license="MIT",
     packages=["aav"],
     install_requires=[
-        "click"
+        "click",
+        "colorama"
     ],
+    entry_points={
+        "console_scripts": [
+            "aav = aav.cli:convert"
+        ]
+    },
     classifiers=[
         "Topic :: Scientific/Engineering :: Bio-Informatics"
     ]
