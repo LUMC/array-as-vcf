@@ -89,11 +89,6 @@ class AffyReader(Reader):
             ref = '.'
             alt = '.'
 
-        if ref is None:
-            ref = '.'
-        if alt is None:
-            alt = '.'
-
         return Variant(chrom=chrom, pos=pos, ref=ref, alt=alt,
                        qual=self.qual, id=rs_id, info_fields=infos,
                        genotype=gt)
