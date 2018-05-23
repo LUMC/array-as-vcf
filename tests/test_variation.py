@@ -6,10 +6,12 @@ test_variation.py
 :copyright: (c) 2018 Leiden University Medical Center
 :license: MIT
 """
+from datetime import datetime
 import pytest
+from aav import __version__
 from aav.variation import (Variant, InfoField, InfoFieldNumber, Genotype,
                            MetaLine, InfoFieldType, InfoHeaderLine,
-                           FormatHeaderLine)
+                           FormatHeaderLine, date_header, program_header)
 
 
 info_test_data = [
@@ -210,3 +212,12 @@ def test_vcf_line(vcf_args, expected_line):
 @pytest.mark.parametrize("header, expected_str", header_line_data)
 def test_header_line(header, expected_str):
     assert str(header) == expected_str
+
+
+def test_program_header():
+    assert str(program_header()) == "##source=aav_v{0}".format(__version__)
+
+
+def test_file_date():
+    date_str = datetime.utcnow().isocalendar()
+    assert str(date_header()) == "##fileDate={0}".format(date_str)

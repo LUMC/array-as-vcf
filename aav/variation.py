@@ -8,6 +8,9 @@ aav.variation
 """
 import enum
 from typing import List, Optional, Any
+from datetime import datetime
+
+from . import __version__
 
 
 class InfoFieldNumber(enum.Enum):
@@ -158,3 +161,17 @@ class InfoHeaderLine(BracketHeaderLine):
 
 class FormatHeaderLine(BracketHeaderLine):
     header_type = "FORMAT"
+
+
+def program_header() -> MetaLine:
+    return MetaLine("source", "aav_v{0}".format(__version__))
+
+
+def date_header() -> MetaLine:
+    date = datetime.utcnow().isocalendar()
+    return MetaLine("fileDate", date)
+
+
+VCF_v_4_2 = MetaLine("fileformat", "VCFv4.2")
+GT_FORMAT = FormatHeaderLine("GT", InfoFieldNumber.one,
+                             InfoFieldType.STRING, "Genotype")
