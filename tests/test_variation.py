@@ -7,7 +7,9 @@ test_variation.py
 :license: MIT
 """
 import pytest
-from aav.variation import Variant, InfoField, InfoFieldNumber, Genotype
+from aav.variation import (Variant, InfoField, InfoFieldNumber, Genotype,
+                           MetaLine, InfoFieldType, InfoHeaderLine,
+                           FormatHeaderLine)
 
 
 info_test_data = [
@@ -130,6 +132,63 @@ vcf_test_data = [
     )
 ]
 
+header_line_data = [
+    (
+        MetaLine("key", "val"),
+        "##key=val"
+    ),
+    (
+        InfoHeaderLine("FOO", InfoFieldNumber.one,
+                       InfoFieldType.STRING, "FOO value"),
+        '##INFO=<ID=FOO,Number=1,Type=String,Description="FOO value">'  # noqa
+    ),
+    (
+        InfoHeaderLine("FOO", InfoFieldNumber.one,
+                       InfoFieldType.FLAG, "FOO value"),
+        '##INFO=<ID=FOO,Number=0,Type=Flag,Description="FOO value">'  # noqa
+    ),
+    (
+        InfoHeaderLine("FOO", InfoFieldNumber.one,
+                       InfoFieldType.INT, "FOO value"),
+        '##INFO=<ID=FOO,Number=1,Type=Integer,Description="FOO value">'  # noqa
+    ),
+    (
+        InfoHeaderLine("FOO", InfoFieldNumber.one,
+                       InfoFieldType.FLOAT, "FOO value"),
+        '##INFO=<ID=FOO,Number=1,Type=Float,Description="FOO value">'  # noqa
+    ),
+    (
+        InfoHeaderLine("FOO", InfoFieldNumber.A,
+                       InfoFieldType.STRING, "FOO value"),
+        '##INFO=<ID=FOO,Number=A,Type=String,Description="FOO value">'  # noqa
+    ),
+    (
+        InfoHeaderLine("FOO", InfoFieldNumber.G,
+                       InfoFieldType.STRING, "FOO value"),
+        '##INFO=<ID=FOO,Number=G,Type=String,Description="FOO value">'  # noqa
+    ),
+    (
+        InfoHeaderLine("FOO", InfoFieldNumber.R,
+                       InfoFieldType.STRING, "FOO value"),
+        '##INFO=<ID=FOO,Number=R,Type=String,Description="FOO value">'  # noqa
+    ),
+    (
+        InfoHeaderLine("FOO", InfoFieldNumber.one,
+                       InfoFieldType.STRING),
+        '##INFO=<ID=FOO,Number=1,Type=String,Description="A field">'  # noqa
+    ),
+    (
+        InfoHeaderLine("FOO", InfoFieldNumber.one,
+                       InfoFieldType.STRING, '"FOO\\BAR"'),
+        '##INFO=<ID=FOO,Number=1,Type=String,Description="\\"FOO\\\\BAR\\"">'  # noqa
+    ),
+    (
+        FormatHeaderLine("FOO", InfoFieldNumber.one,
+                         InfoFieldType.STRING),
+        '##FORMAT=<ID=FOO,Number=1,Type=String,Description="A field">'
+    )
+]
+
 
 @pytest.mark.parametrize("info_args, expected_str", info_test_data)
 def test_info_str(info_args, expected_str):
@@ -146,3 +205,8 @@ def test_info_flag_exc():
 def test_vcf_line(vcf_args, expected_line):
     a = Variant(*vcf_args)
     assert a.vcf_line == expected_line
+
+
+@pytest.mark.parametrize("header, expected_str", header_line_data)
+def test_header_line(header, expected_str):
+    assert str(header) == expected_str

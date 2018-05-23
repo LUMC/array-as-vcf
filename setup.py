@@ -11,16 +11,18 @@ from os.path import abspath, dirname, join
 
 from setuptools import setup
 
+from aav import __version__, __author__
+
 readme_file = join(abspath(dirname(__file__)), "README.md")
 with open(readme_file) as desc_handle:
     long_desc = desc_handle.read()
 
 setup(
     name="aav",
-    version="0.0.1",
+    version=__version__,
     description="Array to VCF",
     long_description=long_desc,
-    author="Sander Bollen",
+    author=__author__,
     author_email="a.h.b.bollen@lumc.nl",
     license="MIT",
     packages=["aav"],

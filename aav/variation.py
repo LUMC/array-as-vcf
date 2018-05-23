@@ -18,6 +18,13 @@ class InfoFieldNumber(enum.Enum):
     unknown = "."
 
 
+class InfoFieldType(enum.Enum):
+    STRING = "String"
+    FLOAT = "Float"
+    INT = "Integer"
+    FLAG = "Flag"
+
+
 class Genotype(enum.Enum):
     hom_ref = "0/0"
     het = "0/1"
@@ -92,3 +99,62 @@ class Variant(object):
             fmt += "\tGT\t{0}".format(self.genotype.value)
 
         return fmt
+
+
+class HeaderLine(object):
+
+    def __str__(self) -> str:
+        return "##"
+
+
+class MetaLine(HeaderLine):
+    def __init__(self, key, value):
+        """
+        Simple meta line with key-value pairs
+        """
+        self.key = key
+        self.value = value
+
+    def __str__(self) -> str:
+        return super().__str__() + "{0}={1}".format(self.key, self.value)
+
+
+class BracketHeaderLine(HeaderLine):
+    header_type = None
+
+    def __init__(self, id: str, number: InfoFieldNumber,
+                 type: InfoFieldType, description: Optional[str] = None):
+        """
+        An INFO or FORMAT header line
+        :param id: id of the field
+        :param number: number of info field. Defaults to 0 if type is FLAG
+        :param type: type of info field
+        :param description: Optional description of field
+        """
+        self.id = id
+        if type == InfoFieldType.FLAG:
+            self.number = "0"
+        else:
+            self.number = number.value
+        self.type = type.value
+        if description is None:
+            self.description = "A field"
+        else:
+            self.description = description.replace(
+                '\\', '\\\\'
+            ).replace('"', '\\"')
+
+    def __str__(self) -> str:
+        field = '{0}=<ID={1},Number={2},Type={3},Description="{4}">'.format(
+            self.header_type, self.id, self.number,
+            self.type, self.description
+        )
+        return super().__str__() + field
+
+
+class InfoHeaderLine(BracketHeaderLine):
+    header_type = "INFO"
+
+
+class FormatHeaderLine(BracketHeaderLine):
+    header_type = "FORMAT"
