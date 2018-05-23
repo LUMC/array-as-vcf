@@ -7,11 +7,13 @@ test_readers.py
 
 :license: MIT
 """
+from datetime import date
 from pathlib import Path
 import pytest
+from aav import __version__
 from aav.readers import (AffyReader, CytoScanReader,
                          Lumi317kReader, Lumi370kReader,
-                         autodetect_reader)
+                         autodetect_reader, Reader)
 from aav.lookup import RSLookup
 from aav.variation import Genotype
 
@@ -204,3 +206,67 @@ def test_reader_refs(reader, refs):
 def test_reader_alts(reader, alts):
     for i, rec in enumerate(reader):
         assert rec.alt == alts[i]
+
+
+def test_base_reader_header():
+    reader = Reader(_lumi_370_path)
+    header = reader.vcf_header("sample_01")
+    date_str = date.today().isoformat()
+    exp = (
+        "##fileformat=VCFv4.2\n"
+        "##fileDate={0}\n"
+        "##source=aav_v{1}\n"
+        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
+        "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample_01\n"
+           ).format(date_str, __version__)
+    assert header == exp
+
+
+def test_affy_reader_header(affy_reader):
+    header = affy_reader.vcf_header("sample_01")
+    date_str = date.today().isoformat()
+    exp = (
+        "##fileformat=VCFv4.2\n"
+        "##fileDate={0}\n"
+        "##source=aav_v{1}\n"
+        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
+        '##INFO=<ID=ID,Number=1,Type=String,Description="A field">\n'
+        '##INFO=<ID=AffymetrixSNPsID,Number=1,Type=String,Description="A field">\n'
+        '##INFO=<ID=log2ratio_AB,Number=1,Type=Float,Description="A field">\n'
+        '##INFO=<ID=N_AB,Number=1,Type=Integer,Description="A field">\n'
+        '##INFO=<ID=LOH_likelihood,Number=1,Type=Float,Description="A field">\n'
+        "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample_01\n"
+           ).format(date_str, __version__)
+    assert header == exp
+
+
+def test_cytoscan_reader_header(cytoscan_reader):
+    header = cytoscan_reader.vcf_header("sample_01")
+    date_str = date.today().isoformat()
+    exp = (
+        "##fileformat=VCFv4.2\n"
+        "##fileDate={0}\n"
+        "##source=aav_v{1}\n"
+        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
+        '##INFO=<ID=Probe_Set_ID,Number=1,Type=String,Description="A field">\n'
+        '##INFO=<ID=Signal_A,Number=1,Type=Float,Description="A field">\n'
+        '##INFO=<ID=Signal_B,Number=1,Type=Float,Description="A field">\n'
+        "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample_01\n"
+           ).format(date_str, __version__)
+    assert header == exp
+
+
+def test_lumi_reader_header(lumi_317_reader):
+    header = lumi_317_reader.vcf_header("sample_01")
+    date_str = date.today().isoformat()
+    exp = (
+        "##fileformat=VCFv4.2\n"
+        "##fileDate={0}\n"
+        "##source=aav_v{1}\n"
+        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
+        '##INFO=<ID=Log_R_Ratio,Number=1,Type=Float,Description="A field">\n'
+        '##INFO=<ID=CNV_Value,Number=1,Type=Integer,Description="A field">\n'
+        '##INFO=<ID=Allele_Freq,Number=1,Type=Float,Description="A field">\n'
+        "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample_01\n"
+           ).format(date_str, __version__)
+    assert header == exp

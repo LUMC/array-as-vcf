@@ -6,12 +6,13 @@ test_variation.py
 :copyright: (c) 2018 Leiden University Medical Center
 :license: MIT
 """
-from datetime import datetime
+from datetime import date
 import pytest
 from aav import __version__
 from aav.variation import (Variant, InfoField, InfoFieldNumber, Genotype,
                            MetaLine, InfoFieldType, InfoHeaderLine,
-                           FormatHeaderLine, date_header, program_header)
+                           FormatHeaderLine, date_header, program_header,
+                           chrom_header)
 
 
 info_test_data = [
@@ -219,5 +220,10 @@ def test_program_header():
 
 
 def test_file_date():
-    date_str = datetime.utcnow().isocalendar()
+    date_str = date.today().isoformat()
     assert str(date_header()) == "##fileDate={0}".format(date_str)
+
+
+def test_chrom_header():
+    e = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample_01"
+    assert chrom_header("sample_01") == e

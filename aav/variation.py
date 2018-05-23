@@ -8,7 +8,7 @@ aav.variation
 """
 import enum
 from typing import List, Optional, Any
-from datetime import datetime
+from datetime import date
 
 from . import __version__
 
@@ -168,8 +168,16 @@ def program_header() -> MetaLine:
 
 
 def date_header() -> MetaLine:
-    date = datetime.utcnow().isocalendar()
-    return MetaLine("fileDate", date)
+    d = date.today().isoformat()
+    return MetaLine("fileDate", d)
+
+
+def chrom_header(sample_name: str) -> str:
+    """Create final header line. Single sample only"""
+    s = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{0}".format(
+        sample_name
+    )
+    return s
 
 
 VCF_v_4_2 = MetaLine("fileformat", "VCFv4.2")

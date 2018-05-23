@@ -6,13 +6,17 @@ aav.readers
 :copyright: (c) 2018 Leiden University Medical Center
 :license: MIT
 """
+from functools import reduce
 from math import log10
 from pathlib import Path
 from typing import Optional, List, Type
 
 from werkzeug.exceptions import NotFound
 
-from .variation import Variant, InfoFieldNumber, InfoField, Genotype
+from .variation import (Variant, InfoFieldNumber, InfoField, Genotype,
+                        InfoHeaderLine, GT_FORMAT, VCF_v_4_2,
+                        program_header, date_header, chrom_header,
+                        InfoFieldType)
 from .lookup import RSLookup
 from .utils import comma_float
 
@@ -32,6 +36,10 @@ class Reader(object):
         self.handle = self.path.open()
         self.header_lines = []
 
+        self.header_fields = [
+            VCF_v_4_2, date_header(), program_header(), GT_FORMAT
+        ]
+
         for _ in range(n_header_lines):
             self.header_lines.append(next(self.handle))
 
@@ -41,9 +49,9 @@ class Reader(object):
     def __iter__(self):
         return self
 
-    @property
-    def vcf_header(self) -> str:
-        raise NotImplementedError
+    def vcf_header(self, sample_name: str) -> str:
+        s = reduce(lambda x, y: x + str(y) + "\n", self.header_fields, "")
+        return s + chrom_header(sample_name) + '\n'
 
 
 class AffyReader(Reader):
@@ -67,6 +75,14 @@ class AffyReader(Reader):
         self.qual = qual
         self.prefix_chr = prefix_chr
         self.lookup_table = lookup_table
+
+        self.header_fields += [
+            InfoHeaderLine("ID", InfoFieldNumber.one, InfoFieldType.STRING),
+            InfoHeaderLine("AffymetrixSNPsID", InfoFieldNumber.one, InfoFieldType.STRING),
+            InfoHeaderLine("log2ratio_AB", InfoFieldNumber.one, InfoFieldType.FLOAT),
+            InfoHeaderLine("N_AB", InfoFieldNumber.one, InfoFieldType.INT),
+            InfoHeaderLine("LOH_likelihood", InfoFieldNumber.one, InfoFieldType.FLOAT)
+        ]
 
     def __next__(self) -> Variant:
         line = next(self.handle).strip().split("\t")
@@ -131,6 +147,12 @@ class CytoScanReader(Reader):
         self.prefix_chr = prefix_chr
         self.lookup_table = lookup_table
 
+        self.header_fields += [
+            InfoHeaderLine("Probe_Set_ID", InfoFieldNumber.one, InfoFieldType.STRING),
+            InfoHeaderLine("Signal_A", InfoFieldNumber.one, InfoFieldType.FLOAT),
+            InfoHeaderLine("Signal_B", InfoFieldNumber.one, InfoFieldType.FLOAT)
+        ]
+
     def __next__(self) -> Variant:
         line = next(self.handle).strip().split("\t")
         chrom = self.get_chrom(line[7])
@@ -192,6 +214,12 @@ class LumiReader(Reader):
         self.lookup_table = lookup_table
         self.chr_prefix = prefix_chr
         self.qual = qual
+
+        self.header_fields += [
+            InfoHeaderLine("Log_R_Ratio", InfoFieldNumber.one, InfoFieldType.FLOAT),
+            InfoHeaderLine("CNV_Value", InfoFieldNumber.one, InfoFieldType.INT),
+            InfoHeaderLine("Allele_Freq", InfoFieldNumber.one, InfoFieldType.FLOAT)
+        ]
 
     def __next__(self) -> Variant:
         line_items = next(self.handle).strip().split("\t")
