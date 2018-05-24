@@ -78,10 +78,13 @@ class AffyReader(Reader):
 
         self.header_fields += [
             InfoHeaderLine("ID", InfoFieldNumber.one, InfoFieldType.STRING),
-            InfoHeaderLine("AffymetrixSNPsID", InfoFieldNumber.one, InfoFieldType.STRING),
-            InfoHeaderLine("log2ratio_AB", InfoFieldNumber.one, InfoFieldType.FLOAT),
+            InfoHeaderLine("AffymetrixSNPsID", InfoFieldNumber.one,
+                           InfoFieldType.STRING),
+            InfoHeaderLine("log2ratio_AB", InfoFieldNumber.one,
+                           InfoFieldType.FLOAT),
             InfoHeaderLine("N_AB", InfoFieldNumber.one, InfoFieldType.INT),
-            InfoHeaderLine("LOH_likelihood", InfoFieldNumber.one, InfoFieldType.FLOAT)
+            InfoHeaderLine("LOH_likelihood", InfoFieldNumber.one,
+                           InfoFieldType.FLOAT)
         ]
 
     def __next__(self) -> Variant:
@@ -148,9 +151,12 @@ class CytoScanReader(Reader):
         self.lookup_table = lookup_table
 
         self.header_fields += [
-            InfoHeaderLine("Probe_Set_ID", InfoFieldNumber.one, InfoFieldType.STRING),
-            InfoHeaderLine("Signal_A", InfoFieldNumber.one, InfoFieldType.FLOAT),
-            InfoHeaderLine("Signal_B", InfoFieldNumber.one, InfoFieldType.FLOAT)
+            InfoHeaderLine("Probe_Set_ID", InfoFieldNumber.one,
+                           InfoFieldType.STRING),
+            InfoHeaderLine("Signal_A", InfoFieldNumber.one,
+                           InfoFieldType.FLOAT),
+            InfoHeaderLine("Signal_B", InfoFieldNumber.one,
+                           InfoFieldType.FLOAT)
         ]
 
     def __next__(self) -> Variant:
@@ -216,9 +222,12 @@ class LumiReader(Reader):
         self.qual = qual
 
         self.header_fields += [
-            InfoHeaderLine("Log_R_Ratio", InfoFieldNumber.one, InfoFieldType.FLOAT),
-            InfoHeaderLine("CNV_Value", InfoFieldNumber.one, InfoFieldType.INT),
-            InfoHeaderLine("Allele_Freq", InfoFieldNumber.one, InfoFieldType.FLOAT)
+            InfoHeaderLine("Log_R_Ratio", InfoFieldNumber.one,
+                           InfoFieldType.FLOAT),
+            InfoHeaderLine("CNV_Value", InfoFieldNumber.one,
+                           InfoFieldType.INT),
+            InfoHeaderLine("Allele_Freq", InfoFieldNumber.one,
+                           InfoFieldType.FLOAT)
         ]
 
     def __next__(self) -> Variant:

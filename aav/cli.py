@@ -32,6 +32,9 @@ def green_message(msg: str) -> None:
 @click.option("-b", "--build",
               type=click.Choice(["GRCh37", "GRCh38"]),
               help="")
+@click.option("-s", "--sample-name",
+              type=click.STRING,
+              help="Name of sample in VCF file")
 @click.option("-c", "--chr-prefix",
               type=click.STRING,
               required=False,
@@ -44,7 +47,8 @@ def green_message(msg: str) -> None:
               type=click.Path(writable=True),
               required=False,
               help="Optional path to write generated lookup table")
-def convert(path: str, build: str, chr_prefix: Optional[str],
+def convert(path: str, build: str, sample_name: str,
+            chr_prefix: Optional[str],
             lookup_table: Optional[str], dump: Optional[str]):
     true_path = Path(path)
     try:
@@ -76,6 +80,8 @@ def convert(path: str, build: str, chr_prefix: Optional[str],
     else:
         reader = reader_cls(true_path, lookup_table=rs_look,
                             prefix_chr=chr_prefix)
+
+    print(reader.vcf_header(sample_name), end='')
 
     i = 0
 
