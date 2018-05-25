@@ -1,0 +1,12 @@
+build:
+  script:
+    - apt-get update -y
+    - apt-get install python-dev python-pip
+    - pip install --upgrade pip setuptools wheel
+    - pip install -r requirements.txt
+    - pip install -r requirements-dev.txt
+    - python setup.py install
+
+test:
+  script:
+    - tox
