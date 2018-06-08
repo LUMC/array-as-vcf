@@ -175,13 +175,16 @@ class CytoScanReader(Reader):
 
         try:
             q_res = self.lookup_table[id]
+        except NotFound:
+            ref = '.'
+            alt = '.'
+            gt = Genotype.unknown
+        else:
             ref = q_res.ref
             alt = q_res.alt
-        except NotFound:
-            ref = "."
-            alt = "."
+            ref_is_minor = q_res.ref_is_minor
+            gt = self.get_genotype(line[1], ref_is_minor)
 
-        gt = self.get_genotype(line[1])
         qual = self.get_qual(float(line[2]))
 
         infos = [
@@ -193,13 +196,17 @@ class CytoScanReader(Reader):
         return Variant(chrom=chrom, pos=pos, ref=ref, alt=alt, id=id,
                        qual=qual, info_fields=infos, genotype=gt)
 
-    def get_genotype(self, call_code: str) -> Genotype:
+    def get_genotype(self, call_code: str, ref_is_minor: bool) -> Genotype:
         if call_code.upper() == "AB" or call_code.upper() == "BA":
             return Genotype.het
-        elif call_code.upper() == "AA":
+        elif call_code.upper() == "AA" and not ref_is_minor:
             return Genotype.hom_ref
-        elif call_code.upper() == "BB":
+        elif call_code.upper() == "AA" and ref_is_minor:
             return Genotype.hom_alt
+        elif call_code.upper() == "BB" and not ref_is_minor:
+            return Genotype.hom_alt
+        elif call_code.upper() == "BB" and ref_is_minor:
+            return Genotype.hom_ref
         else:
             return Genotype.unknown
 
