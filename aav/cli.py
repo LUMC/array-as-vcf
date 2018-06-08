@@ -11,10 +11,9 @@ import click
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
-import json
 
 from .readers import autodetect_reader
-from .lookup import RSLookup
+from .lookup import RSLookup, deserialize_query_results
 
 
 def green_message(msg: str) -> None:
@@ -65,7 +64,7 @@ def convert(path: str, build: str, sample_name: str,
         init_el = 0
     else:
         with Path(lookup_table).open() as lhandle:
-            init_d = json.load(lhandle)
+            init_d = deserialize_query_results(lhandle.read())
         init_el = len(init_d.keys())
         rs_look = RSLookup(build=build, init_d=init_d)
 
