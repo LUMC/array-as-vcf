@@ -103,7 +103,9 @@ class AffyReader(Reader):
         ]
 
         try:
-            ref, alt = self.lookup_table[rs_id]
+            q_res = self.lookup_table[rs_id]
+            ref = q_res.ref
+            alt = q_res.alt
         except NotFound:
             ref = '.'
             alt = '.'
@@ -166,7 +168,9 @@ class CytoScanReader(Reader):
         id = line[6]
 
         try:
-            ref, alt = self.lookup_table[id]
+            q_res = self.lookup_table[id]
+            ref = q_res.ref
+            alt = q_res.alt
         except NotFound:
             ref = "."
             alt = "."
@@ -252,7 +256,9 @@ class LumiReader(Reader):
         ]
 
         try:
-            ref, alt = self.lookup_table[rs_id]
+            q_res = self.lookup_table[rs_id]
+            ref = q_res.ref
+            alt = q_res.alt
         except NotFound:
             ref = "."
             alt = "."

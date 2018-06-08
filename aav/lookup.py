@@ -88,7 +88,7 @@ def query_ensembl(rs_id: str, build: str,
     except IndexError:  # mapping may be `mapping: []` when it does not map to genome # noqa
         raise NotFound("rsID does not map to genome")
 
-    minor_allele = j.get("evidence", dict()).get("minor_allele")
+    minor_allele = j.get("minor_allele")
     if minor_allele is None:
         raise NotFound("rsID has no minor allele")
 
@@ -132,13 +132,13 @@ class RSLookup(object):
         else:
             self.__rsids = {}
 
-    def __getitem__(self, rs_id: str):
+    def __getitem__(self, rs_id: str) -> QueryResult:
         if rs_id not in self.__rsids:
             self.__rsids[rs_id] = self._get_ensembl(rs_id)
 
         return self.__rsids[rs_id]
 
-    def _get_ensembl(self, rs_id):
+    def _get_ensembl(self, rs_id) -> QueryResult:
         for _ in range(self.request_tries):
             try:
                 return query_ensembl(rs_id, self.build, self.request_timeout)
@@ -146,6 +146,6 @@ class RSLookup(object):
                 continue
         raise ValueError("Too many tries for request")
 
-    def dumps(self):
+    def dumps(self) -> str:
         """Dump table to json-formatted string"""
         return serialize_query_results(self.__rsids)
