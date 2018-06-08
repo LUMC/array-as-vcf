@@ -61,7 +61,7 @@ _grch37_lookup = grch37_lookup()
 genotype_test_data = [
     (
         affy_reader(_grch37_lookup),
-        [Genotype.unknown, Genotype.hom_ref, Genotype.het, Genotype.hom_alt,
+        [Genotype.unknown, Genotype.hom_ref, Genotype.het, Genotype.hom_ref,
          Genotype.unknown, Genotype.unknown]
     ),
     (

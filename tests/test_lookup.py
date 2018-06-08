@@ -7,7 +7,7 @@ test_lookup.py
 :license: MIT
 """
 
-from aav.lookup import query_ensembl, RSLookup
+from aav.lookup import query_ensembl, RSLookup, QueryResult
 from datetime import datetime
 
 import pytest
@@ -26,19 +26,27 @@ def grch38_lookup():
 
 
 def test_query_ensembl_known_rsid_grch38():
-    assert query_ensembl("rs56116432", "GRCh38") == ("C", ["T"])
+    assert query_ensembl("rs56116432", "GRCh38") == QueryResult(
+        "C", ["T"], False
+    )
 
 
 def test_query_ensembl_known_rsid_grch37():
-    assert query_ensembl("rs56116432", "GRCh37") == ("C", ["T"])
+    assert query_ensembl("rs56116432", "GRCh37") == QueryResult(
+        "C", ["T"], False
+    )
 
 
 def test_query_multi_alt_grch38():
-    assert query_ensembl("rs60", "GRCh38") == ("A", ["G", "T"])
+    assert query_ensembl("rs60", "GRCh38") == QueryResult(
+        "A", ["G", "T"], True
+    )
 
 
 def test_query_multi_alt_grch37():
-    assert query_ensembl("rs60", "GRCh37") == ("A", ["G", "T"])
+    assert query_ensembl("rs60", "GRCh37") == QueryResult(
+        "A", ["G", "T"], True
+    )
 
 
 def test_query_ensembl_unknown_build():
@@ -58,7 +66,9 @@ def test_timeout():
 
 
 def test_lookup_succeed_grch37(grch37_lookup):
-    assert grch37_lookup['rs56116432'] == ("C", ["T"])
+    assert grch37_lookup['rs56116432'] == QueryResult(
+        "C", ["T"], False
+    )
 
 
 def test_lookup_fail_grch37(grch37_lookup):
@@ -67,7 +77,9 @@ def test_lookup_fail_grch37(grch37_lookup):
 
 
 def test_lookup_succeed_grhc38(grch38_lookup):
-    assert grch38_lookup['rs56116432'] == ("C", ["T"])
+    assert grch38_lookup['rs56116432'] == QueryResult(
+        "C", ["T"], False
+    )
 
 
 def test_lookup_fail_grch38(grch38_lookup):
