@@ -36,12 +36,13 @@ class QueryResult(NamedTuple):
 
 def serialize_query_results(results: Dict[str, QueryResult]) -> str:
     """Serialize as json"""
-    raise NotImplementedError
+    return json.dumps(map(lambda x: x.serialize(), results))
 
 
 def deserialize_query_results(json_str: str) -> Dict[str, QueryResult]:
     """Deserialize from json"""
-    raise NotImplementedError
+    d = json.loads(json_str)
+    return {k: QueryResult.deserialize(v) for k, v in d.items()}
 
 
 def query_ensembl(rs_id: str, build: str,
@@ -147,4 +148,4 @@ class RSLookup(object):
 
     def dumps(self):
         """Dump table to json-formatted string"""
-        return json.dumps(self.__rsids)
+        return serialize_query_results(self.__rsids)
