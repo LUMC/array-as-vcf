@@ -8,13 +8,44 @@ aav.lookup
 """
 import requests
 from werkzeug.exceptions import NotFound
-from typing import Tuple, List
+from typing import List, NamedTuple, Dict
 
 import json
 
 
+class QueryResult(NamedTuple):
+    ref: str
+    alt: List[str]
+    ref_is_minor: bool
+
+    def serialize(self) -> str:
+        alt_part = ",".join(self.alt)
+        minor = "T" if self.ref_is_minor else "F"
+        return f"{self.ref}:{alt_part}:{minor}"
+
+    @classmethod
+    def deserialize(cls, string: str):
+        items = string.split(":")
+        if len(items) != 3:
+            raise ValueError(f"Cannot deserialize string {string}")
+        ref, alt, minor = items
+        alts = alt.split(",")
+        ref_is_minor = True if minor == "T" else False
+        return cls(ref, alts, ref_is_minor)
+
+
+def serialize_query_results(results: Dict[str, QueryResult]) -> str:
+    """Serialize as json"""
+    raise NotImplementedError
+
+
+def deserialize_query_results(json_str: str) -> Dict[str, QueryResult]:
+    """Deserialize from json"""
+    raise NotImplementedError
+
+
 def query_ensembl(rs_id: str, build: str,
-                  timeout: float = 120) -> Tuple[str, List[str]]:
+                  timeout: float = 120) -> QueryResult:
     """
     Get ref and alt alleles for an rs id from ensembl
 
@@ -55,12 +86,21 @@ def query_ensembl(rs_id: str, build: str,
         allele_string = j.get("mappings", [{}])[0].get("allele_string", "")
     except IndexError:  # mapping may be `mapping: []` when it does not map to genome # noqa
         raise NotFound("rsID does not map to genome")
+
+    minor_allele = j.get("evidence", dict()).get("minor_allele")
+    if minor_allele is None:
+        raise NotFound("rsID has no minor allele")
+
     parts = allele_string.split("/")
     ref = parts[0]
-    if len(parts) > 0:
-        return ref, parts[1:]
+    if ref.upper() == minor_allele.upper():
+        ref_is_minor = True
     else:
-        return ref, []
+        ref_is_minor = False
+    if len(parts) > 0:
+        return QueryResult(ref, parts[1:], ref_is_minor)
+    else:
+        return QueryResult(ref, [], ref_is_minor)
 
 
 class RSLookup(object):
