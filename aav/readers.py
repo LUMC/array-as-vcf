@@ -92,7 +92,17 @@ class AffyReader(Reader):
         chrom = self.get_chrom(line[3])
         pos = int(line[4])
         rs_id = line[2]
-        gt = self.get_gt(int(line[7]))
+        try:
+            q_res = self.lookup_table[rs_id]
+        except NotFound:
+            ref = '.'
+            alt = '.'
+            gt = Genotype.unknown
+        else:
+            ref = q_res.ref
+            alt = q_res.alt
+            ref_is_minor = q_res.ref_is_minor
+            gt = self.get_gt(int(line[7]), ref_is_minor)
 
         infos = [
             InfoField("ID", line[0], InfoFieldNumber.one),
@@ -102,27 +112,23 @@ class AffyReader(Reader):
             InfoField("LOH_likelihood", line[8], InfoFieldNumber.one)
         ]
 
-        try:
-            q_res = self.lookup_table[rs_id]
-            ref = q_res.ref
-            alt = q_res.alt
-        except NotFound:
-            ref = '.'
-            alt = '.'
-
         return Variant(chrom=chrom, pos=pos, ref=ref, alt=alt,
                        qual=self.qual, id=rs_id, info_fields=infos,
                        genotype=gt)
 
-    def get_gt(self, val: int) -> Genotype:
+    def get_gt(self, val: int, ref_is_minor: bool) -> Genotype:
         if val == 0:
             return Genotype.unknown
-        if val == 1:
+        elif val == 1 and not ref_is_minor:
             return Genotype.hom_ref
-        if val == 2:
-            return Genotype.het
-        if val == 3:
+        elif val == 1 and ref_is_minor:
             return Genotype.hom_alt
+        elif val == 2:
+            return Genotype.het
+        elif val == 3 and not ref_is_minor:
+            return Genotype.hom_alt
+        elif val == 3 and ref_is_minor:
+            return Genotype.hom_ref
         return Genotype.unknown
 
     def get_chrom(self, val):
