@@ -254,7 +254,18 @@ class LumiReader(Reader):
         chrom = self.get_chrom(raw_chrom)
         pos = int(line_items[2])
         g_type = line_items[3]
-        gt = self.get_genotype(g_type)
+
+        try:
+            q_res = self.lookup_table[rs_id]
+        except NotFound:
+            ref = '.'
+            alt = '.'
+            gt = Genotype.unknown
+        else:
+            ref = q_res.ref
+            alt = q_res.alt
+            ref_is_minor = q_res.ref_is_minor
+            gt = self.get_genotype(g_type)
 
         infos = [
             InfoField(
@@ -267,14 +278,6 @@ class LumiReader(Reader):
                 "Allele_Freq", comma_float(line_items[6]), InfoFieldNumber.one
             )
         ]
-
-        try:
-            q_res = self.lookup_table[rs_id]
-            ref = q_res.ref
-            alt = q_res.alt
-        except NotFound:
-            ref = "."
-            alt = "."
 
         return Variant(chrom=chrom, pos=pos, ref=ref, alt=alt,
                        qual=self.qual, id=rs_id, info_fields=infos,
@@ -291,15 +294,19 @@ class LumiReader(Reader):
     def get_raw_chrom(self, line_items: List[str]) -> str:
         raise NotImplementedError
 
-    def get_genotype(self, g_type: str) -> Genotype:
+    def get_genotype(self, g_type: str, ref_is_minor: bool) -> Genotype:
         if g_type == "NC":
             return Genotype.unknown
         elif len(set(g_type)) == 2:
             return Genotype.het
-        elif g_type == "AA":
+        elif g_type == "AA" and not ref_is_minor:
             return Genotype.hom_ref
-        elif g_type == "BB":
+        elif g_type == "AA" and ref_is_minor:
             return Genotype.hom_alt
+        elif g_type == "BB" and not ref_is_minor:
+            return Genotype.hom_alt
+        elif g_type == "BB" and ref_is_minor:
+            return Genotype.hom_ref
         else:
             return Genotype.unknown
 
