@@ -36,7 +36,7 @@ class QueryResult(NamedTuple):
 
 def serialize_query_results(results: Dict[str, QueryResult]) -> str:
     """Serialize as json"""
-    return json.dumps(map(lambda x: x.serialize(), results))
+    return json.dumps({k: v.serialize() for k, v in results.items()})
 
 
 def deserialize_query_results(json_str: str) -> Dict[str, QueryResult]:
