@@ -91,6 +91,6 @@ def convert(path: str, build: str, sample_name: str,
     green_message("Converted {0} records".format(i))
 
     if dump is not None:
-        click.echo(click.style("Dumping lookup table"), err=True)
+        green_message("Dumping lookup table")
         with Path(dump).open("w") as dhandle:
             dhandle.write(rs_look.dumps())

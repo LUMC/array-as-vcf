@@ -8,7 +8,7 @@ aav.lookup
 """
 import requests
 from werkzeug.exceptions import NotFound
-from typing import List, NamedTuple, Dict
+from typing import List, NamedTuple, Dict, Optional
 
 import json
 
@@ -34,15 +34,27 @@ class QueryResult(NamedTuple):
         return cls(ref, alts, ref_is_minor)
 
 
-def serialize_query_results(results: Dict[str, QueryResult]) -> str:
+def serialize_query_results(results: Dict[str, Optional[QueryResult]]) -> str:
     """Serialize as json"""
-    return json.dumps({k: v.serialize() for k, v in results.items()})
+    serialized_dict = dict()
+    for k, v in results.items():
+        if v is not None:
+            serialized_dict[k] = v.serialize()
+        else:
+            serialized_dict[k] = None
+    return json.dumps(serialized_dict)
 
 
-def deserialize_query_results(json_str: str) -> Dict[str, QueryResult]:
+def deserialize_query_results(json_str: str) -> Dict[str, Optional[QueryResult]]:
     """Deserialize from json"""
     d = json.loads(json_str)
-    return {k: QueryResult.deserialize(v) for k, v in d.items()}
+    deserialized_dict = dict()
+    for k, v in d.items():
+        if v is not None:
+            deserialized_dict[k] = QueryResult.deserialize(v)
+        else:
+            deserialized_dict[k] = None
+    return deserialized_dict
 
 
 def query_ensembl(rs_id: str, build: str,
@@ -132,7 +144,7 @@ class RSLookup(object):
         else:
             self.__rsids = {}
 
-    def __getitem__(self, rs_id: str) -> QueryResult:
+    def __getitem__(self, rs_id: str) -> Optional[QueryResult]:
         if rs_id not in self.__rsids:
             self.__rsids[rs_id] = self._get_ensembl(rs_id)
 

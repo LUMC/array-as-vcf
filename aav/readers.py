@@ -94,15 +94,20 @@ class AffyReader(Reader):
         rs_id = line[2]
         try:
             q_res = self.lookup_table[rs_id]
-        except NotFound:
+        except (NotFound, ValueError):
             ref = '.'
             alt = '.'
             gt = Genotype.unknown
         else:
-            ref = q_res.ref
-            alt = q_res.alt
-            ref_is_minor = q_res.ref_is_minor
-            gt = self.get_gt(int(line[7]), ref_is_minor)
+            if q_res is None:
+                ref = '.'
+                alt = '.'
+                gt = Genotype.unknown
+            else:
+                ref = q_res.ref
+                alt = q_res.alt
+                ref_is_minor = q_res.ref_is_minor
+                gt = self.get_gt(int(line[7]), ref_is_minor)
 
         infos = [
             InfoField("ID", line[0], InfoFieldNumber.one),
@@ -175,15 +180,19 @@ class CytoScanReader(Reader):
 
         try:
             q_res = self.lookup_table[id]
-        except NotFound:
+        except (NotFound, ValueError):
             ref = '.'
             alt = '.'
             gt = Genotype.unknown
         else:
-            ref = q_res.ref
-            alt = q_res.alt
-            ref_is_minor = q_res.ref_is_minor
-            gt = self.get_genotype(line[1], ref_is_minor)
+            if q_res is None:
+                ref = '.'
+                alt = '.'
+                gt = Genotype.unknown
+            else:
+                ref = q_res.ref
+                alt = q_res.alt
+                gt = self.get_genotype(ref, alt, line[5])
 
         qual = self.get_qual(float(line[2]))
 
@@ -196,17 +205,17 @@ class CytoScanReader(Reader):
         return Variant(chrom=chrom, pos=pos, ref=ref, alt=alt, id=id,
                        qual=qual, info_fields=infos, genotype=gt)
 
-    def get_genotype(self, call_code: str, ref_is_minor: bool) -> Genotype:
-        if call_code.upper() == "AB" or call_code.upper() == "BA":
+    def get_genotype(self, ref: str, alt: List[str], calls: str) -> Genotype:
+        if calls is None or calls == "":
+            return Genotype.unknown
+
+        alleles = list(calls)
+        if len(set(alleles)) > 1:
             return Genotype.het
-        elif call_code.upper() == "AA" and not ref_is_minor:
+        elif alleles[0] == ref:
             return Genotype.hom_ref
-        elif call_code.upper() == "AA" and ref_is_minor:
+        elif any([alleles[0] == x for x in alt]):
             return Genotype.hom_alt
-        elif call_code.upper() == "BB" and not ref_is_minor:
-            return Genotype.hom_alt
-        elif call_code.upper() == "BB" and ref_is_minor:
-            return Genotype.hom_ref
         else:
             return Genotype.unknown
 
@@ -257,15 +266,20 @@ class LumiReader(Reader):
 
         try:
             q_res = self.lookup_table[rs_id]
-        except NotFound:
+        except (NotFound, ValueError):
             ref = '.'
             alt = '.'
             gt = Genotype.unknown
         else:
-            ref = q_res.ref
-            alt = q_res.alt
-            ref_is_minor = q_res.ref_is_minor
-            gt = self.get_genotype(g_type)
+            if q_res is None:
+                ref = '.'
+                alt = '.'
+                gt = Genotype.unknown
+            else:
+                ref = q_res.ref
+                alt = q_res.alt
+                ref_is_minor = q_res.ref_is_minor
+                gt = self.get_genotype(g_type, ref_is_minor)
 
         infos = [
             InfoField(
@@ -336,17 +350,19 @@ def autodetect_reader(path: Path) -> Type[Reader]:
     :return: Reader class (NOT instance)
     :raises: NotImplementedError for unknown types.
     """
-
+    pot_affy = None
     with path.open() as handle:
         for i, line in enumerate(handle):
             if i == 0 and "Affymetrix" in line:
-                return AffyReader
+                pot_affy = line
             elif i == 0 and line.startswith("Name"):
                 return Lumi317kReader
             elif i == 0 and line.startswith("Chr"):
                 return Lumi370kReader
             elif i == 11 and line.startswith("Probe"):
                 return CytoScanReader
+            elif i > 11 and pot_affy is not None:
+                return AffyReader
             elif i > 11:
                 raise NotImplementedError
 
