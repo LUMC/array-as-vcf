@@ -12,8 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from .readers import autodetect_reader
-from .lookup import RSLookup, deserialize_query_results
+from .readers import autodetect_reader, OpenArrayReader
+from .lookup import RSLookup
 
 
 def green_message(msg: str) -> None:
@@ -70,8 +70,9 @@ def convert(path: str, build: str, sample_name: str,
 
     green_message("Start conversion.")
 
-    if chr_prefix is None:
-        reader = reader_cls(true_path, lookup_table=rs_look)
+    if reader_cls == OpenArrayReader:
+        reader = reader_cls(true_path, lookup_table=rs_look,
+                            sample=sample_name, prefix_chr=chr_prefix)
     else:
         reader = reader_cls(true_path, lookup_table=rs_look,
                             prefix_chr=chr_prefix)

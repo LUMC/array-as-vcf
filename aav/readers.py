@@ -75,7 +75,7 @@ class OpenArrayReader(Reader):
     def __next__(self):
         line = next(self.handle).strip().split("\t")
         if len(line) < 8:
-            return self.__next__() # a little recursion, skips
+            return self.__next__()  # a little recursion, skips
         assay_name = line[0]
         assay_id = line[1]
         raw_gene_symbol = line[2]
@@ -442,7 +442,9 @@ def autodetect_reader(path: Path) -> Type[Reader]:
                 return CytoScanReader
             elif i > 11 and pot_affy is not None:
                 return AffyReader
-            elif i > 11:
+            elif i == 18 and line.startswith("Assay Name"):
+                return OpenArrayReader
+            elif i > 18:
                 raise NotImplementedError
 
     raise NotImplementedError
