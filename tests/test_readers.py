@@ -62,21 +62,23 @@ genotype_test_data = [
     (
         affy_reader(_grch37_lookup),
         [Genotype.unknown, Genotype.hom_ref, Genotype.het, Genotype.hom_ref,
+         Genotype.unknown, Genotype.unknown, Genotype.unknown,
+         Genotype.hom_ref, Genotype.het, Genotype.hom_ref,
          Genotype.unknown, Genotype.unknown]
     ),
     (
         cytoscan_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_ref, Genotype.het, Genotype.unknown,
+        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het, Genotype.unknown,
          Genotype.unknown]
     ),
     (
         lumi_317_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_ref, Genotype.het, Genotype.unknown,
+        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het, Genotype.unknown,
          Genotype.unknown, Genotype.unknown]
     ),
     (
         lumi_370_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_ref, Genotype.het, Genotype.unknown,
+        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het, Genotype.unknown,
          Genotype.unknown, Genotype.unknown]
     )
 ]
@@ -84,11 +86,12 @@ genotype_test_data = [
 chrom_test_data = [
     (
         AffyReader(_affy_path, _grch37_lookup),
-        ["1", "1", "1", "1", "X", "X"]
+        ["1", "1", "1", "1", "X", "X", "1", "1", "1", "1", "X", "X"]
     ),
     (
         AffyReader(_affy_path, _grch37_lookup, prefix_chr="chr"),
-        ["chr1", "chr1", "chr1", "chr1", "chrX", "chrX"]
+        ["chr1", "chr1", "chr1", "chr1", "chrX", "chrX", "chr1", "chr1",
+         "chr1", "chr1", "chrX", "chrX"]
     ),
     (
         CytoScanReader(_cytoscan_path, _grch37_lookup),
@@ -119,7 +122,7 @@ chrom_test_data = [
 ref_test_data = [
     (
         AffyReader(_affy_path, _grch37_lookup),
-        ["T", "A", "T", "T", ".", "."]
+        ["T", "A", "T", "T", ".", ".", "T", "A", "T", "T", ".", "."]
     ),
     (
         CytoScanReader(_cytoscan_path, _grch37_lookup),
@@ -138,7 +141,8 @@ ref_test_data = [
 alt_test_data = [
     (
         AffyReader(_affy_path, _grch37_lookup),
-        [["C"], ["C"], ["C"], ["A", "G"], ".", "."]
+        [["C"], ["C"], ["C"], ["A", "G"], ".", ".",
+         ["C"], ["C"], ["C"], ["A", "G"], ".", "."]
     ),
     (
         CytoScanReader(_cytoscan_path, _grch37_lookup),
@@ -163,7 +167,7 @@ autodetect_reader_data = [
 
 
 def test_affy_reader_amount(affy_reader):
-    assert len(list(affy_reader)) == 6
+    assert len(list(affy_reader)) == 12
 
 
 def test_cytoscan_reader_amount(cytoscan_reader):

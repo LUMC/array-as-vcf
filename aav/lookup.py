@@ -45,7 +45,7 @@ def serialize_query_results(results: Dict[str, Optional[QueryResult]]) -> str:
     return json.dumps(serialized_dict)
 
 
-def deserialize_query_results(json_str: str) -> Dict[str, Optional[QueryResult]]:
+def deserialize_query_results(json_str: str) -> Dict[str, Optional[QueryResult]]:  # noqa
     """Deserialize from json"""
     d = json.loads(json_str)
     deserialized_dict = dict()
