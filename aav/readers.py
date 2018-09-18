@@ -9,7 +9,7 @@ aav.readers
 from functools import reduce
 from math import log10
 from pathlib import Path
-from typing import Optional, List, Type
+from typing import Optional, List, Type, Tuple
 
 from werkzeug.exceptions import NotFound
 
@@ -18,7 +18,7 @@ from .variation import (Variant, InfoFieldNumber, InfoField, Genotype,
                         program_header, date_header, chrom_header,
                         InfoFieldType)
 from .lookup import RSLookup
-from .utils import comma_float
+from .utils import comma_float, empty_string
 
 
 GRCH37_LOOKUP = RSLookup("GRCh37")
@@ -52,6 +52,85 @@ class Reader(object):
     def vcf_header(self, sample_name: str) -> str:
         s = reduce(lambda x, y: x + str(y) + "\n", self.header_fields, "")
         return s + chrom_header(sample_name) + '\n'
+
+
+class OpenArrayReader(Reader):
+    def __init__(self, path: Path, lookup_table: RSLookup, sample: str,
+                 qual: int = 100, prefix_chr: Optional[str] = None):
+        super().__init__(path, n_header_lines=18)
+        self.qual = qual
+        self.sample = sample
+        self.lookup_table = lookup_table
+        self.prefix_chr = prefix_chr
+
+        self.header_fields += [
+            InfoHeaderLine("Assay_Name", InfoFieldNumber.one,
+                           InfoFieldType.STRING),
+            InfoHeaderLine("Assay_ID", InfoFieldNumber.one,
+                           InfoFieldType.STRING),
+            InfoHeaderLine("Gene_Symbol", InfoFieldNumber.unknown,
+                           InfoFieldType.STRING)
+        ]
+
+    def __next__(self):
+        line = next(self.handle).strip().split("\t")
+        if len(line) < 8:
+            return self.__next__() # a little recursion, skips
+        assay_name = line[0]
+        assay_id = line[1]
+        raw_gene_symbol = line[2]
+        line_sample = line[4]
+        if line_sample != self.sample:
+            return self.__next__()  # a little recursion, skips
+        rs_id = line[3]
+        raw_chrom = line[6]
+        pos = line[7]
+        if empty_string(raw_chrom) or empty_string(pos) or empty_string(rs_id):
+            return self.__next__()  # a little recursion, skips
+        call = line[5]
+        try:
+            q_res = self.lookup_table[rs_id]
+        except (NotFound, ValueError):
+            ref = '.'
+            alt = '.'
+            genotype = Genotype.unknown
+        else:
+            ref = q_res.ref
+            genotype, alt = self.get_genotype_and_alt(call, ref, q_res.alt)
+
+        infos = [
+            InfoField("Assay_Name", assay_name, InfoFieldNumber.one),
+            InfoField("Assay_ID", assay_id, InfoFieldNumber.one)
+        ]
+
+        if not empty_string(raw_gene_symbol):
+            infos.append(InfoField("Gene_Symbol", raw_gene_symbol.split(";"),
+                                   InfoFieldNumber.unknown))
+
+        chrom = self.get_chrom(raw_chrom)
+        return Variant(chrom=chrom, pos=int(pos), id=rs_id, ref=ref,
+                       alt=alt, info_fields=infos, qual=self.qual,
+                       genotype=genotype)
+
+    def get_chrom(self, chrom: str) -> str:
+        if self.prefix_chr is None:
+            return chrom
+        return "{0}{1}".format(self.prefix_chr, chrom)
+
+    def get_genotype_and_alt(self, call: str, ref: str,
+                             fallback_alt: str) -> Tuple[Genotype, str]:
+        if call == "N/A" or call == "NOAMP" or call == "UND":
+            return Genotype.unknown, "."
+
+        alleles = set(call.split("/"))
+        if len(alleles) > 1:
+            return Genotype.het, (alleles - {ref}).pop()
+
+        homozygous_allele = alleles.pop()
+        if homozygous_allele == ref:
+            return Genotype.hom_ref, fallback_alt
+        else:
+            return Genotype.hom_alt, homozygous_allele
 
 
 class AffyReader(Reader):
