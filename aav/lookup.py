@@ -8,6 +8,7 @@ aav.lookup
 """
 import requests
 from werkzeug.exceptions import NotFound
+from pathlib import Path
 from typing import List, NamedTuple, Dict, Optional
 
 import json
@@ -161,3 +162,15 @@ class RSLookup(object):
     def dumps(self) -> str:
         """Dump table to json-formatted string"""
         return serialize_query_results(self.__rsids)
+
+    def __len__(self):
+        return len(self.__rsids)
+
+    @classmethod
+    def from_path(cls, path: Path, build: str, request_timeout: float = 120,
+                  request_tries: int = 1):
+        with path.open() as handle:
+            js = handle.read()
+        init_d = deserialize_query_results(js)
+        return cls(build, init_d, request_timeout=request_timeout,
+                   request_tries=request_tries)

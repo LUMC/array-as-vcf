@@ -53,26 +53,22 @@ def convert(path: str, build: str, sample_name: str,
     try:
         reader_cls = autodetect_reader(true_path)
     except NotImplementedError:
-        raise click.FileError("Could not detect type of array")
+        raise click.FileError("Could not detect type of array.")
     else:
         green_message(
-            "Detected array file with type: {0}".format(reader_cls.__name__)
+            "Detected array file with type: {0}.".format(reader_cls.__name__)
         )
 
     if lookup_table is None:
         rs_look = RSLookup(build=build)
-        init_el = 0
     else:
-        with Path(lookup_table).open() as lhandle:
-            init_d = deserialize_query_results(lhandle.read())
-        init_el = len(init_d.keys())
-        rs_look = RSLookup(build=build, init_d=init_d)
+        rs_look = RSLookup.from_path(Path(lookup_table), build=build)
 
     green_message(
-        "Initialized lookup table with {0} initial elements".format(init_el)
+        f"Initialized lookup table with {len(rs_look)} initial elements."
     )
 
-    green_message("Start conversion")
+    green_message("Start conversion.")
 
     if chr_prefix is None:
         reader = reader_cls(true_path, lookup_table=rs_look)
@@ -88,9 +84,9 @@ def convert(path: str, build: str, sample_name: str,
         print(record.vcf_line)
         i += 1
 
-    green_message("Converted {0} records".format(i))
+    green_message("Converted {0} records.".format(i))
 
     if dump is not None:
-        green_message("Dumping lookup table")
+        green_message("Dumping lookup table.")
         with Path(dump).open("w") as dhandle:
             dhandle.write(rs_look.dumps())

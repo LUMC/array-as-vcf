@@ -8,6 +8,7 @@ aav.utils
 """
 from typing import Optional
 
+
 def comma_float(val: str) -> float:
     """
     Get float for a string that may contain commas in stead of dots
