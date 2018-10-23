@@ -30,10 +30,11 @@ def green_message(msg: str) -> None:
               help="Path to array file")
 @click.option("-b", "--build",
               type=click.Choice(["GRCh37", "GRCh38"]),
-              help="")
+              help="Genome build. Default = GRCh37", default="GRCh37")
 @click.option("-s", "--sample-name",
               type=click.STRING,
-              help="Name of sample in VCF file")
+              help="Name of sample in VCF file",
+              required=True)
 @click.option("-c", "--chr-prefix",
               type=click.STRING,
               required=False,
@@ -46,12 +47,16 @@ def green_message(msg: str) -> None:
               type=click.Path(writable=True),
               required=False,
               help="Optional path to write generated lookup table")
+@click.option("--encoding", type=click.STRING, required=False,
+              help="Optional encoding of array file. "
+                   "Encoding defaults to UTF-8 if not given")
 def convert(path: str, build: str, sample_name: str,
             chr_prefix: Optional[str],
-            lookup_table: Optional[str], dump: Optional[str]):
+            lookup_table: Optional[str], dump: Optional[str],
+            encoding: Optional[str]):
     true_path = Path(path)
     try:
-        reader_cls = autodetect_reader(true_path)
+        reader_cls = autodetect_reader(true_path, encoding=encoding)
     except NotImplementedError:
         raise click.FileError("Could not detect type of array.")
     else:
@@ -72,10 +77,11 @@ def convert(path: str, build: str, sample_name: str,
 
     if reader_cls == OpenArrayReader:
         reader = reader_cls(true_path, lookup_table=rs_look,
-                            sample=sample_name, prefix_chr=chr_prefix)
+                            sample=sample_name, prefix_chr=chr_prefix,
+                            encoding=encoding)
     else:
         reader = reader_cls(true_path, lookup_table=rs_look,
-                            prefix_chr=chr_prefix)
+                            prefix_chr=chr_prefix, encoding=encoding)
 
     print(reader.vcf_header(sample_name), end='')
 
