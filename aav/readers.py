@@ -396,7 +396,7 @@ class LumiReader(Reader):
             alt = '.'
             gt = Genotype.unknown
         else:
-            if q_res is None:
+            if q_res is None or q_res.ref_is_minor is None:
                 ref = '.'
                 alt = '.'
                 gt = Genotype.unknown
