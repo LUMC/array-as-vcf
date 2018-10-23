@@ -9,6 +9,7 @@ There are four currently supported array formats:
 * Cytoscan HD Array (TSV export)
 * Lumi 317k array (TSV export)
 * Lumi 370k array (TSV export)
+* Multi-sample OpenArray (TSV export)
 
 Binary formats are not (yet) supported.
  
@@ -50,9 +51,17 @@ containing a single large object of shape:
 
 ```json
 {
-  "rs0": ["ref_allele", ["all_alt_alleles"]]
+  "rs0": "{ref_allele}:{alt_alleles}:{ref_is_minor_allele}"
 }
 ``` 
+
+E.g. 
+
+```json
+{
+  "rs1000003": "A:G:F"
+}
+```
 
 If you have never run `aav` before , you can run `aav` sans lookup table
 and `dump` the generated internal lookup table to a file for next iterations.
