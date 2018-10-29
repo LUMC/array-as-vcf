@@ -9,7 +9,7 @@ aav.readers
 from functools import reduce
 from math import log10
 from pathlib import Path
-from typing import Optional, List, Type, Tuple
+from typing import Optional, List, Type, Tuple, Set
 
 from werkzeug.exceptions import NotFound
 
@@ -58,12 +58,14 @@ class Reader(object):
 class OpenArrayReader(Reader):
     def __init__(self, path: Path, lookup_table: RSLookup, sample: str,
                  qual: int = 100, prefix_chr: Optional[str] = None,
-                 encoding: Optional[str] = None):
+                 encoding: Optional[str] = None,
+                 exclude_assays: Optional[Set[str]] = {'C_990000001_10'}):
         super().__init__(path, n_header_lines=18, encoding=encoding)
         self.qual = qual
         self.sample = sample
         self.lookup_table = lookup_table
         self.prefix_chr = prefix_chr
+        self.exclude_assays = exclude_assays
 
         self.header_fields += [
             InfoHeaderLine("Assay_Name", InfoFieldNumber.one,
@@ -112,6 +114,11 @@ class OpenArrayReader(Reader):
         header = self.header_lines[-1].strip().split("\t")
         return header.index("Gene Symbol")
 
+    @property
+    def call_col_idx(self) -> int:
+        header = self.header_lines[-1].strip().split("\t")
+        return header.index("Call")
+
     def __next__(self):
         raw_line = next(self.handle)
         if empty_string(raw_line):
@@ -121,6 +128,8 @@ class OpenArrayReader(Reader):
             return self.__next__()  # a little recursion, skips
         assay_name = line[self.assay_name_col_idx]
         assay_id = line[self.assay_id_col_idx]
+        if assay_id in self.exclude_assays:
+            return self.__next__()  # recurse if assay to exclude
         raw_gene_symbol = line[self.gene_symbol_col_idx]
         line_sample = line[self.sample_col_idx]
         if line_sample != self.sample:
@@ -130,7 +139,7 @@ class OpenArrayReader(Reader):
         pos = line[self.position_col_idx]
         if empty_string(raw_chrom) or empty_string(pos) or empty_string(rs_id):
             return self.__next__()  # a little recursion, skips
-        call = line[5]
+        call = line[self.call_col_idx]
         try:
             q_res = self.lookup_table[rs_id]
         except (NotFound, ValueError):
