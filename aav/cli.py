@@ -10,7 +10,7 @@ aav.cli
 import click
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Set
 
 from .readers import autodetect_reader, OpenArrayReader
 from .lookup import RSLookup
@@ -21,6 +21,13 @@ def green_message(msg: str) -> None:
         datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
     )
     click.echo(click.style(pre_msg + msg, fg="green"), err=True)
+
+
+def exlude_assays_callback(ctx, param, value) -> Optional[Set[str]]:
+    if value is None:
+        return None
+
+    return set(value.split(","))
 
 
 @click.command()
@@ -50,10 +57,15 @@ def green_message(msg: str) -> None:
 @click.option("--encoding", type=click.STRING, required=False,
               help="Optional encoding of array file. "
                    "Encoding defaults to UTF-8 if not given")
+@click.option("--exclude-assays", type=click.STRING, required=False,
+              callback=exlude_assays_callback,
+              help="Optional comma-separated list of assay IDs "
+                   "for OpenArray to ignore")
 def convert(path: str, build: str, sample_name: str,
             chr_prefix: Optional[str],
             lookup_table: Optional[str], dump: Optional[str],
-            encoding: Optional[str]):
+            encoding: Optional[str],
+            exclude_assays: Optional[Set[str]]):
     true_path = Path(path)
     try:
         reader_cls = autodetect_reader(true_path, encoding=encoding)
@@ -78,7 +90,8 @@ def convert(path: str, build: str, sample_name: str,
     if reader_cls == OpenArrayReader:
         reader = reader_cls(true_path, lookup_table=rs_look,
                             sample=sample_name, prefix_chr=chr_prefix,
-                            encoding=encoding)
+                            encoding=encoding,
+                            exclude_assays=exclude_assays)
     else:
         reader = reader_cls(true_path, lookup_table=rs_look,
                             prefix_chr=chr_prefix, encoding=encoding)

@@ -59,7 +59,7 @@ class OpenArrayReader(Reader):
     def __init__(self, path: Path, lookup_table: RSLookup, sample: str,
                  qual: int = 100, prefix_chr: Optional[str] = None,
                  encoding: Optional[str] = None,
-                 exclude_assays: Optional[Set[str]] = {'C_990000001_10'}):
+                 exclude_assays: Optional[Set[str]] = None):
         super().__init__(path, n_header_lines=18, encoding=encoding)
         self.qual = qual
         self.sample = sample
@@ -128,7 +128,7 @@ class OpenArrayReader(Reader):
             return self.__next__()  # a little recursion, skips
         assay_name = line[self.assay_name_col_idx]
         assay_id = line[self.assay_id_col_idx]
-        if assay_id in self.exclude_assays:
+        if self.exclude_assays is not None and assay_id in self.exclude_assays:
             return self.__next__()  # recurse if assay to exclude
         raw_gene_symbol = line[self.gene_symbol_col_idx]
         line_sample = line[self.sample_col_idx]
