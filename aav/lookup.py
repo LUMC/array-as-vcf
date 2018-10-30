@@ -21,7 +21,8 @@ class QueryResult(NamedTuple):
 
     def serialize(self) -> str:
         alt_part = ",".join(self.alt)
-        minor = "U" if self.ref_is_minor is None else "T" if self.ref_is_minor else "F"
+        minor = ("U" if self.ref_is_minor is None
+                 else "T" if self.ref_is_minor else "F")
         return f"{self.ref}:{alt_part}:{minor}"
 
     @classmethod
@@ -31,7 +32,8 @@ class QueryResult(NamedTuple):
             raise ValueError(f"Cannot deserialize string {string}")
         ref, alt, minor = items
         alts = alt.split(",")
-        ref_is_minor = None if minor == "U" else True if minor == "T" else False
+        ref_is_minor = (None if minor == "U"
+                        else True if minor == "T" else False)
         return cls(ref, alts, ref_is_minor)
 
 
