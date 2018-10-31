@@ -10,6 +10,9 @@ test_lookup.py
 from aav.lookup import query_ensembl, RSLookup, QueryResult
 from datetime import datetime
 
+from pathlib import Path
+import json
+
 import pytest
 from werkzeug.exceptions import NotFound
 from requests.exceptions import Timeout
@@ -25,6 +28,12 @@ def grch38_lookup():
     return RSLookup("GRCh38")
 
 
+@pytest.fixture
+def lookup_table():
+    return (Path(__file__).parent / Path("data")
+            / Path("lookup_table_test.json"))
+
+
 def test_query_ensembl_known_rsid_grch38():
     assert query_ensembl("rs56116432", "GRCh38") == QueryResult(
         "C", ["T"], False
@@ -34,6 +43,12 @@ def test_query_ensembl_known_rsid_grch38():
 def test_query_ensembl_known_rsid_grch37():
     assert query_ensembl("rs56116432", "GRCh37") == QueryResult(
         "C", ["T"], False
+    )
+
+
+def test_query_ensembl_unknown_minor_grch37():
+    assert query_ensembl("rs3913290", "GRCh37") == QueryResult(
+        "C", ["T"], None
     )
 
 
@@ -123,3 +138,72 @@ def test_lookup_timeout_tries():
     look = RSLookup(build="GRCh37", request_timeout=0.0001, request_tries=5)
     with pytest.raises(ValueError):
         look['r56']
+
+
+def test_lookup_table_load(lookup_table):
+    lookup = RSLookup.from_path(lookup_table, "GRCh37")
+    assert lookup._RSLookup__rsids == {
+        "rs776746": QueryResult("C", ["T"], False),
+        "rs497692": QueryResult("T", ["C"], False),
+        "rs12248560": QueryResult("C", ["A", "T"], False),
+        "rs768983": QueryResult("C", ["T"], False),
+        "rs2032598": QueryResult("T", ["C"], False),
+        "rs1884213": QueryResult("T", ["C"], True),
+        "rs1633021": QueryResult("T", ["C"], False),
+        "rs4735258": QueryResult("T", ["C"], False),
+        "rs10373": QueryResult("A", ["G"], True),
+        "rs2819561": QueryResult("A", ["G"], True),
+        "rs7514030": QueryResult("T", ["C"], False),
+        "rs7300444": QueryResult("C", ["T"], False),
+        "rs622272": QueryResult("T", ["G"], True),
+        "rs629562": QueryResult("A", ["G"], True),
+        "rs2249028": QueryResult("G", ["A"], False),
+        "rs2711823": QueryResult("G", ["A"], False),
+        "rs1381532": QueryResult("A", ["G"], True),
+        "rs4148973": QueryResult("T", ["G"], True),
+        "rs2942": QueryResult("G", ["A"], True),
+        "rs1019433": QueryResult("G", ["A"], False),
+        "rs1037256": QueryResult("G", ["A", "C", "T"], True),
+        "rs6124288": QueryResult("T", ["C"], False),
+        "rs10203363": QueryResult("C", ["T"], False),
+        "rs2229546": QueryResult("C", ["A", "G", 'T'], True),
+        "rs4577050": QueryResult("G", ["A"], True),
+        "rs9962023": QueryResult("T", ["C"], True),
+        "rs9532292": QueryResult("A", ["G"], False),
+        "rs10421632": QueryResult("G", ["A"], False),
+        "rs4688963": QueryResult("T", ["C"], False),
+        "rs2844682": QueryResult("G", ["A"], False),
+        "rs1410592": QueryResult("G", ["A", "T"], True),
+        "rs2228611": QueryResult("T", ["C"], True),
+        "rs5993935": QueryResult("T", ["C"], False),
+        "rs309557": QueryResult("T", ["C"], False),
+        "rs2070203": QueryResult("G", ["A"], False),
+        "rs8024825": QueryResult("A", ["G"], False),
+        "rs9528543": QueryResult("A", ['G'], False),
+        "rs9361875": QueryResult("C", ["T"], False),
+        "rs9837496": QueryResult("C", ["A", "T"], False),
+        "rs10965655": QueryResult("T", ["C"], False),
+        "rs357004": QueryResult("A", ["G"], True),
+        "rs998132": QueryResult("G", ["A"], False),
+        "rs4675": QueryResult("T", ["C"], True),
+        "rs17548783": QueryResult("T", ["C"], False),
+        "rs17686195": QueryResult("T", ["C"], False),
+        "rs17476242": QueryResult("G", ["A"], False),
+        "rs2297995": QueryResult("G", ["A"], True),
+        "rs349047": QueryResult("G", ["A"], False),
+        "rs3912984": QueryResult("T", ["C"], True),
+        "rs4617548": QueryResult("A", ["G"], True),
+        "rs3913290": QueryResult("C", ["T"], None),
+        "rs1147504": QueryResult("G", ["A"], True),
+        "rs10883099": QueryResult("G", ["A"], True),
+        "rs2395029": QueryResult("T", ["G"], False)
+    }
+
+
+def test_lookup_table_dump(lookup_table):
+    with lookup_table.open("r") as handle:
+        original = json.load(handle)
+
+    rs_lookup = RSLookup.from_path(lookup_table, "GRCh37")
+    generated = json.loads(rs_lookup.dumps())
+    assert generated == original
