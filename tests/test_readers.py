@@ -13,7 +13,8 @@ import pytest
 from aav import __version__
 from aav.readers import (AffyReader, CytoScanReader,
                          Lumi317kReader, Lumi370kReader,
-                         autodetect_reader, Reader)
+                         autodetect_reader, Reader,
+                         OpenArrayReader)
 from aav.lookup import RSLookup
 from aav.variation import Genotype
 
@@ -35,6 +36,9 @@ _affy_path = (
 _cytoscan_path = (
     Path(__file__).parent / Path("data") / Path("cytoscan_test.txt")
 )
+_open_array_path = (
+    Path(__file__).parent / Path("data") / Path("open_array_test.txt")
+)
 
 
 @pytest.fixture
@@ -55,6 +59,12 @@ def affy_reader(grch37_lookup):
 @pytest.fixture
 def cytoscan_reader(grch37_lookup):
     return CytoScanReader(_cytoscan_path, grch37_lookup)
+
+
+@pytest.fixture
+def open_array_reader(grch37_lookup):
+    return OpenArrayReader(_open_array_path, grch37_lookup,
+                           "e31a0a96465a", encoding="windows-1252")
 
 
 _grch37_lookup = grch37_lookup()
@@ -80,6 +90,24 @@ genotype_test_data = [
         lumi_370_reader(_grch37_lookup),
         [Genotype.hom_alt, Genotype.hom_alt, Genotype.het, Genotype.unknown,
          Genotype.unknown, Genotype.unknown]
+    ),
+    (
+        open_array_reader(_grch37_lookup),
+        [Genotype.unknown, Genotype.het, Genotype.hom_alt, Genotype.hom_ref,
+         Genotype.hom_ref, Genotype.hom_ref, Genotype.hom_ref,
+         Genotype.hom_ref, Genotype.hom_alt, Genotype.hom_alt,
+         Genotype.hom_alt, Genotype.hom_ref, Genotype.hom_alt,
+         Genotype.hom_alt, Genotype.het, Genotype.het, Genotype.hom_alt,
+         Genotype.het, Genotype.hom_alt, Genotype.unknown, Genotype.het,
+         Genotype.het, Genotype.het, Genotype.hom_alt, Genotype.unknown,
+         Genotype.het, Genotype.het, Genotype.hom_ref, Genotype.het,
+         Genotype.het, Genotype.hom_alt, Genotype.unknown, Genotype.het,
+         Genotype.het, Genotype.hom_ref, Genotype.unknown, Genotype.hom_ref,
+         Genotype.hom_ref, Genotype.het, Genotype.het, Genotype.hom_alt,
+         Genotype.hom_alt, Genotype.het, Genotype.hom_alt, Genotype.het,
+         Genotype.hom_ref, Genotype.hom_alt, Genotype.hom_alt,
+         Genotype.hom_ref, Genotype.het, Genotype.hom_ref, Genotype.het,
+         Genotype.het, Genotype.unknown, Genotype.hom_ref]
     )
 ]
 
@@ -116,6 +144,18 @@ chrom_test_data = [
     (
         Lumi370kReader(_lumi_370_path, _grch37_lookup, prefix_chr="chr"),
         ["chr1", "chr1", "chr1", "chr1", "chrX", "chrX"]
+    ),
+    (
+        OpenArrayReader(_open_array_path, _grch37_lookup, prefix_chr="chr",
+                        sample="e31a0a96465a", encoding="windows-1252"),
+        ["chr3", "chr19", "chr15", "chr4", "chr13", "chr21", "chr19",
+         "chr12", "chr4", "chr18", "chr14", "chrY", "chr4", "chr19",
+         "chr6", "chr13", "chr18", "chr11", "chr1", "chr8", "chr15", "chr1",
+         "chr20", "chr15", "chrY", "chr18", "chr8", "chr18", "chr17",
+         "chr13", "chr14", "chr6", "chr17", "chr13", "chr10", "chr19",
+         "chr2", "chrY", "chr6", "chr21", "chr18", "chr14", "chr6", "chr8",
+         "chr18", "chr2", "chr3", "chr22", "chr17", "chr1", "chr10",
+         "chr10", "chr3", "chrY", "chr18"]
     )
 ]
 
@@ -159,10 +199,11 @@ alt_test_data = [
 ]
 
 autodetect_reader_data = [
-    (_lumi_317_path, "Lumi317kReader"),
-    (_lumi_370_path, "Lumi370kReader"),
-    (_affy_path, "AffyReader"),
-    (_cytoscan_path, "CytoScanReader")
+    (_lumi_317_path, "Lumi317kReader", None),
+    (_lumi_370_path, "Lumi370kReader", None),
+    (_affy_path, "AffyReader", None),
+    (_cytoscan_path, "CytoScanReader", None),
+    (_open_array_path, "OpenArrayReader", 'windows-1252')
 ]
 
 
@@ -182,15 +223,22 @@ def test_lumi370_reader_amount(lumi_370_reader):
     assert len(list(lumi_370_reader)) == 6
 
 
+def test_open_array_reader_amount(open_array_reader):
+    assert len(list(open_array_reader)) == 55
+
+
 @pytest.mark.parametrize("reader, genotypes", genotype_test_data)
 def test_reader_genotypes(reader, genotypes):
     found_gt = [x.genotype for x in reader]
     assert found_gt == genotypes
 
 
-@pytest.mark.parametrize("path, class_name", autodetect_reader_data)
-def test_autodetect_readers(path, class_name):
-    found_cls = autodetect_reader(path)
+@pytest.mark.parametrize("path, class_name, encoding", autodetect_reader_data)
+def test_autodetect_readers(path, class_name, encoding):
+    if encoding is None:
+        found_cls = autodetect_reader(path)
+    else:
+        found_cls = autodetect_reader(path, encoding=encoding)
     assert found_cls.__name__ == class_name
 
 
@@ -273,4 +321,20 @@ def test_lumi_reader_header(lumi_317_reader):
         '##INFO=<ID=Allele_Freq,Number=1,Type=Float,Description="A field">\n'
         "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample_01\n"
            ).format(date_str, __version__)
+    assert header == exp
+
+
+def test_open_array_reader_header(open_array_reader):
+    header = open_array_reader.vcf_header("e31a0a96465a")
+    date_str = date.today().isoformat()
+    exp = (
+        "##fileformat=VCFv4.2\n"
+        "##fileDate={0}\n"
+        "##source=aav_v{1}\n"
+        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
+        '##INFO=<ID=Assay_Name,Number=1,Type=String,Description="A field">\n'
+        '##INFO=<ID=Assay_ID,Number=1,Type=String,Description="A field">\n'
+        '##INFO=<ID=Gene_Symbol,Number=.,Type=String,Description="A field">\n'
+        "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\te31a0a96465a\n"
+    ).format(date_str, __version__)
     assert header == exp
