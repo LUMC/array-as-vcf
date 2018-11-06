@@ -81,7 +81,6 @@ class OpenArrayReader(Reader):
 
         self._header_splitted = self.header_lines[-1].strip().split("\t")
 
-
     @property
     def chromsome_col_idx(self) -> int:
         return self._header_splitted.index("Chromosome #")
