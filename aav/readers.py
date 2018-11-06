@@ -9,7 +9,7 @@ aav.readers
 from functools import reduce
 from math import log10
 from pathlib import Path
-from typing import Optional, List, Type
+from typing import Optional, List, Type, Tuple, Set
 
 from werkzeug.exceptions import NotFound
 
@@ -18,7 +18,7 @@ from .variation import (Variant, InfoFieldNumber, InfoField, Genotype,
                         program_header, date_header, chrom_header,
                         InfoFieldType)
 from .lookup import RSLookup
-from .utils import comma_float
+from .utils import comma_float, empty_string
 
 
 GRCH37_LOOKUP = RSLookup("GRCh37")
@@ -31,9 +31,10 @@ class Reader(object):
 
     Readers are iterators that produce variants
     """
-    def __init__(self, path: Path, n_header_lines: int = 0):
+    def __init__(self, path: Path, n_header_lines: int = 0,
+                 encoding: Optional[str] = None):
         self.path = path
-        self.handle = self.path.open()
+        self.handle = self.path.open(mode="r", encoding=encoding)
         self.header_lines = []
 
         self.header_fields = [
@@ -54,6 +55,131 @@ class Reader(object):
         return s + chrom_header(sample_name) + '\n'
 
 
+class OpenArrayReader(Reader):
+    def __init__(self, path: Path, lookup_table: RSLookup, sample: str,
+                 qual: int = 100, prefix_chr: Optional[str] = None,
+                 encoding: Optional[str] = None,
+                 exclude_assays: Optional[Set[str]] = None):
+        super().__init__(path, n_header_lines=18, encoding=encoding)
+        self.qual = qual
+        self.sample = sample
+        self.lookup_table = lookup_table
+        self.prefix_chr = prefix_chr
+        if exclude_assays is not None:
+            self.exclude_assays = exclude_assays
+        else:
+            self.exclude_assays = set()
+
+        self.header_fields += [
+            InfoHeaderLine("Assay_Name", InfoFieldNumber.one,
+                           InfoFieldType.STRING),
+            InfoHeaderLine("Assay_ID", InfoFieldNumber.one,
+                           InfoFieldType.STRING),
+            InfoHeaderLine("Gene_Symbol", InfoFieldNumber.unknown,
+                           InfoFieldType.STRING)
+        ]
+
+        self._header_splitted = self.header_lines[-1].strip().split("\t")
+
+    @property
+    def chromsome_col_idx(self) -> int:
+        return self._header_splitted.index("Chromosome #")
+
+    @property
+    def position_col_idx(self) -> int:
+        return self._header_splitted.index("Position")
+
+    @property
+    def sample_col_idx(self) -> int:
+        return self._header_splitted.index("Sample ID")
+
+    @property
+    def rsid_col_idx(self) -> int:
+        return self._header_splitted.index("NCBI SNP Reference")
+
+    @property
+    def assay_name_col_idx(self) -> int:
+        return self._header_splitted.index("Assay Name")
+
+    @property
+    def assay_id_col_idx(self) -> int:
+        return self._header_splitted.index("Assay ID")
+
+    @property
+    def gene_symbol_col_idx(self) -> int:
+        return self._header_splitted.index("Gene Symbol")
+
+    @property
+    def call_col_idx(self) -> int:
+        return self._header_splitted.index("Call")
+
+    def __next__(self):
+        raw_line = next(self.handle)
+        if empty_string(raw_line):
+            raise StopIteration  # end of initial list
+        line = raw_line.strip().split("\t")
+        if len(line) < 8:  # may occur if assay design is dumped in file
+            return self.__next__()  # a little recursion, skips
+        assay_id = line[self.assay_id_col_idx]
+        if assay_id in self.exclude_assays:
+            return self.__next__()  # recurse if assay to exclude
+        line_sample = line[self.sample_col_idx]
+        if line_sample != self.sample:
+            return self.__next__()  # a little recursion, skips
+        rs_id = line[self.rsid_col_idx].strip()  # may have spaces :cry:
+        raw_chrom = line[self.chromsome_col_idx]
+        pos = line[self.position_col_idx]
+        if empty_string(raw_chrom) or empty_string(pos) or empty_string(rs_id):
+            return self.__next__()  # a little recursion, skips
+        try:
+            q_res = self.lookup_table[rs_id]
+        except (NotFound, ValueError):
+            ref = '.'
+            alt = '.'
+            genotype = Genotype.unknown
+        else:
+            call = line[self.call_col_idx]
+            ref = q_res.ref
+            genotype, alt = self.get_genotype_and_alt(call, ref, q_res.alt)
+
+        assay_name = line[self.assay_name_col_idx]
+        raw_gene_symbol = line[self.gene_symbol_col_idx]
+
+        infos = [
+            InfoField("Assay_Name", assay_name, InfoFieldNumber.one),
+            InfoField("Assay_ID", assay_id, InfoFieldNumber.one)
+        ]
+
+        if not empty_string(raw_gene_symbol):
+            infos.append(InfoField("Gene_Symbol", raw_gene_symbol.split(";"),
+                                   InfoFieldNumber.unknown))
+
+        chrom = self.get_chrom(raw_chrom)
+        return Variant(chrom=chrom, pos=int(pos), id=rs_id, ref=ref,
+                       alt=alt, info_fields=infos, qual=self.qual,
+                       genotype=genotype)
+
+    def get_chrom(self, chrom: str) -> str:
+        if self.prefix_chr is None:
+            return chrom
+        return "{0}{1}".format(self.prefix_chr, chrom)
+
+    def get_genotype_and_alt(self, call: str, ref: str,
+                             fallback_alt: str) -> Tuple[Genotype, str]:
+        if call == "N/A" or call == "NOAMP" or call == "UND":
+            return Genotype.unknown, "."
+
+        alleles = set(call.split("/"))
+        if len(alleles) > 1:
+            return Genotype.het, (alleles - {ref}).pop()
+
+        homozygous_allele = alleles.pop()
+        if homozygous_allele == ref:
+            return Genotype.hom_ref, fallback_alt
+        else:
+            return Genotype.hom_alt, homozygous_allele
+
+
 class AffyReader(Reader):
     """
     Affymetrix files are expected to conform to the follow spec:
@@ -70,8 +196,9 @@ class AffyReader(Reader):
     def __init__(self, path: Path,
                  lookup_table: RSLookup,
                  qual: int = 100,
-                 prefix_chr: Optional[str] = None):
-        super().__init__(path, n_header_lines=1)
+                 prefix_chr: Optional[str] = None,
+                 encoding: Optional[str] = None):
+        super().__init__(path, n_header_lines=1, encoding=encoding)
         self.qual = qual
         self.prefix_chr = prefix_chr
         self.lookup_table = lookup_table
@@ -158,8 +285,9 @@ class CytoScanReader(Reader):
 
     def __init__(self, path,
                  lookup_table: RSLookup,
-                 prefix_chr: Optional[str] = None):
-        super().__init__(path, 12)
+                 prefix_chr: Optional[str] = None,
+                 encoding: Optional[str] = None):
+        super().__init__(path, 12, encoding=encoding)
         self.prefix_chr = prefix_chr
         self.lookup_table = lookup_table
 
@@ -241,8 +369,9 @@ class LumiReader(Reader):
     def __init__(self, path: Path,
                  lookup_table: RSLookup,
                  prefix_chr: Optional[str] = None,
-                 qual=100):
-        super().__init__(path, n_header_lines=1)
+                 qual=100,
+                 encoding: Optional[str] = None):
+        super().__init__(path, n_header_lines=1, encoding=encoding)
         self.lookup_table = lookup_table
         self.chr_prefix = prefix_chr
         self.qual = qual
@@ -271,7 +400,7 @@ class LumiReader(Reader):
             alt = '.'
             gt = Genotype.unknown
         else:
-            if q_res is None:
+            if q_res is None or q_res.ref_is_minor is None:
                 ref = '.'
                 alt = '.'
                 gt = Genotype.unknown
@@ -343,15 +472,17 @@ class Lumi317kReader(LumiReader):
         return line_items[1]
 
 
-def autodetect_reader(path: Path) -> Type[Reader]:
+def autodetect_reader(path: Path,
+                      encoding: Optional[str] = None) -> Type[Reader]:
     """
     Detect type of reader for a certain array path
     :param path: instance of Path pointing to path
+    :param encoding: optional encoding of file
     :return: Reader class (NOT instance)
     :raises: NotImplementedError for unknown types.
     """
     pot_affy = None
-    with path.open() as handle:
+    with path.open(encoding=encoding, mode="r") as handle:
         for i, line in enumerate(handle):
             if i == 0 and "Affymetrix" in line:
                 pot_affy = line
@@ -363,7 +494,9 @@ def autodetect_reader(path: Path) -> Type[Reader]:
                 return CytoScanReader
             elif i > 11 and pot_affy is not None:
                 return AffyReader
-            elif i > 11:
+            elif i == 17 and line.startswith("Assay Name"):
+                return OpenArrayReader
+            elif i >= 18:
                 raise NotImplementedError
 
     raise NotImplementedError

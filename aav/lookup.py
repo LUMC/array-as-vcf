@@ -8,6 +8,7 @@ aav.lookup
 """
 import requests
 from werkzeug.exceptions import NotFound
+from pathlib import Path
 from typing import List, NamedTuple, Dict, Optional
 
 import json
@@ -16,11 +17,12 @@ import json
 class QueryResult(NamedTuple):
     ref: str
     alt: List[str]
-    ref_is_minor: bool
+    ref_is_minor: Optional[bool]
 
     def serialize(self) -> str:
         alt_part = ",".join(self.alt)
-        minor = "T" if self.ref_is_minor else "F"
+        minor = ("U" if self.ref_is_minor is None
+                 else "T" if self.ref_is_minor else "F")
         return f"{self.ref}:{alt_part}:{minor}"
 
     @classmethod
@@ -30,7 +32,8 @@ class QueryResult(NamedTuple):
             raise ValueError(f"Cannot deserialize string {string}")
         ref, alt, minor = items
         alts = alt.split(",")
-        ref_is_minor = True if minor == "T" else False
+        ref_is_minor = (None if minor == "U"
+                        else True if minor == "T" else False)
         return cls(ref, alts, ref_is_minor)
 
 
@@ -45,7 +48,7 @@ def serialize_query_results(results: Dict[str, Optional[QueryResult]]) -> str:
     return json.dumps(serialized_dict)
 
 
-def deserialize_query_results(json_str: str) -> Dict[str, Optional[QueryResult]]:
+def deserialize_query_results(json_str: str) -> Dict[str, Optional[QueryResult]]:  # noqa
     """Deserialize from json"""
     d = json.loads(json_str)
     deserialized_dict = dict()
@@ -101,11 +104,11 @@ def query_ensembl(rs_id: str, build: str,
         raise NotFound("rsID does not map to genome")
 
     minor_allele = j.get("minor_allele")
-    if minor_allele is None:
-        raise NotFound("rsID has no minor allele")
 
     parts = allele_string.split("/")
     ref = parts[0]
+    if minor_allele is None:
+        return QueryResult(ref, parts[1:], None)
     if ref.upper() == minor_allele.upper():
         ref_is_minor = True
     else:
@@ -161,3 +164,15 @@ class RSLookup(object):
     def dumps(self) -> str:
         """Dump table to json-formatted string"""
         return serialize_query_results(self.__rsids)
+
+    def __len__(self):
+        return len(self.__rsids)
+
+    @classmethod
+    def from_path(cls, path: Path, build: str, request_timeout: float = 120,
+                  request_tries: int = 1):
+        with path.open() as handle:
+            js = handle.read()
+        init_d = deserialize_query_results(js)
+        return cls(build, init_d, request_timeout=request_timeout,
+                   request_tries=request_tries)
