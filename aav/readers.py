@@ -65,7 +65,10 @@ class OpenArrayReader(Reader):
         self.sample = sample
         self.lookup_table = lookup_table
         self.prefix_chr = prefix_chr
-        self.exclude_assays = exclude_assays
+        if exclude_assays is not None:
+            self.exclude_assays = exclude_assays
+        else:
+            self.exclude_assays = set()
 
         self.header_fields += [
             InfoHeaderLine("Assay_Name", InfoFieldNumber.one,
@@ -76,61 +79,51 @@ class OpenArrayReader(Reader):
                            InfoFieldType.STRING)
         ]
 
-    # TODO: optionally change all these properties to lazyproperties using
-    # eg bolton
+        self._header_splitted = self.header_lines[-1].strip().split("\t")
+
 
     @property
     def chromsome_col_idx(self) -> int:
-        header = self.header_lines[-1].strip().split("\t")
-        return header.index("Chromosome #")
+        return self._header_splitted.index("Chromosome #")
 
     @property
     def position_col_idx(self) -> int:
-        header = self.header_lines[-1].strip().split("\t")
-        return header.index("Position")
+        return self._header_splitted.index("Position")
 
     @property
     def sample_col_idx(self) -> int:
-        header = self.header_lines[-1].strip().split("\t")
-        return header.index("Sample ID")
+        return self._header_splitted.index("Sample ID")
 
     @property
     def rsid_col_idx(self) -> int:
-        header = self.header_lines[-1].strip().split("\t")
-        return header.index("NCBI SNP Reference")
+        return self._header_splitted.index("NCBI SNP Reference")
 
     @property
     def assay_name_col_idx(self) -> int:
-        header = self.header_lines[-1].strip().split("\t")
-        return header.index("Assay Name")
+        return self._header_splitted.index("Assay Name")
 
     @property
     def assay_id_col_idx(self) -> int:
-        header = self.header_lines[-1].strip().split("\t")
-        return header.index("Assay ID")
+        return self._header_splitted.index("Assay ID")
 
     @property
     def gene_symbol_col_idx(self) -> int:
-        header = self.header_lines[-1].strip().split("\t")
-        return header.index("Gene Symbol")
+        return self._header_splitted.index("Gene Symbol")
 
     @property
     def call_col_idx(self) -> int:
-        header = self.header_lines[-1].strip().split("\t")
-        return header.index("Call")
+        return self._header_splitted.index("Call")
 
     def __next__(self):
         raw_line = next(self.handle)
         if empty_string(raw_line):
             raise StopIteration  # end of initial list
         line = raw_line.strip().split("\t")
-        if len(line) < 8:
+        if len(line) < 8:  # may occur if assay design is dumped in file
             return self.__next__()  # a little recursion, skips
-        assay_name = line[self.assay_name_col_idx]
         assay_id = line[self.assay_id_col_idx]
-        if self.exclude_assays is not None and assay_id in self.exclude_assays:
+        if assay_id in self.exclude_assays:
             return self.__next__()  # recurse if assay to exclude
-        raw_gene_symbol = line[self.gene_symbol_col_idx]
         line_sample = line[self.sample_col_idx]
         if line_sample != self.sample:
             return self.__next__()  # a little recursion, skips
@@ -139,7 +132,6 @@ class OpenArrayReader(Reader):
         pos = line[self.position_col_idx]
         if empty_string(raw_chrom) or empty_string(pos) or empty_string(rs_id):
             return self.__next__()  # a little recursion, skips
-        call = line[self.call_col_idx]
         try:
             q_res = self.lookup_table[rs_id]
         except (NotFound, ValueError):
@@ -147,8 +139,12 @@ class OpenArrayReader(Reader):
             alt = '.'
             genotype = Genotype.unknown
         else:
+            call = line[self.call_col_idx]
             ref = q_res.ref
             genotype, alt = self.get_genotype_and_alt(call, ref, q_res.alt)
+
+        assay_name = line[self.assay_name_col_idx]
+        raw_gene_symbol = line[self.gene_symbol_col_idx]
 
         infos = [
             InfoField("Assay_Name", assay_name, InfoFieldNumber.one),
