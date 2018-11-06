@@ -24,6 +24,13 @@ def grch37_lookup():
     return RSLookup(build="GRCh37", request_tries=3)
 
 
+@pytest.fixture(scope="module")
+def test_lookup_table():
+    lookup_path = (Path(__file__).parent / Path("data")
+                   / Path("lookup_table_test.json"))
+    return RSLookup.from_path(lookup_path, build="GRCh37")
+
+
 _lumi_317_path = (
     Path(__file__).parent / Path("data") / Path("lumi_317_test.txt")
 )
@@ -62,12 +69,13 @@ def cytoscan_reader(grch37_lookup):
 
 
 @pytest.fixture
-def open_array_reader(grch37_lookup):
-    return OpenArrayReader(_open_array_path, grch37_lookup,
+def open_array_reader(test_lookup_table):
+    return OpenArrayReader(_open_array_path, test_lookup_table,
                            "e31a0a96465a", encoding="windows-1252")
 
 
 _grch37_lookup = grch37_lookup()
+_test_lookup = test_lookup_table()
 genotype_test_data = [
     (
         affy_reader(_grch37_lookup),
@@ -92,7 +100,7 @@ genotype_test_data = [
          Genotype.unknown, Genotype.unknown]
     ),
     (
-        open_array_reader(_grch37_lookup),
+        open_array_reader(_test_lookup),
         [Genotype.unknown, Genotype.het, Genotype.hom_alt, Genotype.hom_ref,
          Genotype.hom_ref, Genotype.hom_ref, Genotype.hom_ref,
          Genotype.hom_ref, Genotype.hom_alt, Genotype.hom_alt,
@@ -146,7 +154,7 @@ chrom_test_data = [
         ["chr1", "chr1", "chr1", "chr1", "chrX", "chrX"]
     ),
     (
-        OpenArrayReader(_open_array_path, _grch37_lookup, prefix_chr="chr",
+        OpenArrayReader(_open_array_path, _test_lookup, prefix_chr="chr",
                         sample="e31a0a96465a", encoding="windows-1252"),
         ["chr3", "chr19", "chr15", "chr4", "chr13", "chr21", "chr19",
          "chr12", "chr4", "chr18", "chr14", "chrY", "chr4", "chr19",
@@ -175,6 +183,15 @@ ref_test_data = [
     (
         Lumi370kReader(_lumi_370_path, _grch37_lookup),
         ["C", "A", "C", "A", ".", "."]
+    ),
+    (
+        OpenArrayReader(_open_array_path, _test_lookup,
+                        sample="e31a0a96465a", encoding="windows-1252"),
+        ["A", "G", "G", "T", "A", "G", "G", "C", "T", "T", "T", "C", "T",
+         "G", "G", "A", "A", "G", "C", "T", "G", "C", "G", "A", "T", "T",
+         "T", "G", "G", "A", "T", "G", "G", "A", "C", "G", "T", "C", "T",
+         "G", "A", "T", "T", "G", "G", "A", "A", "T", "T", "T", "C", "G",
+         "A", "C", "A"]
     )
 ]
 
