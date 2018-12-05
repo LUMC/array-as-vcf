@@ -251,16 +251,12 @@ class AffyReader(Reader):
     def get_gt(self, val: int, ref_is_minor: bool) -> Genotype:
         if val == 0:
             return Genotype.unknown
-        elif val == 1 and not ref_is_minor:
-            return Genotype.hom_ref
-        elif val == 1 and ref_is_minor:
-            return Genotype.hom_alt
+        elif val == 1:
+            return Genotype.unknown
         elif val == 2:
             return Genotype.het
-        elif val == 3 and not ref_is_minor:
-            return Genotype.hom_alt
-        elif val == 3 and ref_is_minor:
-            return Genotype.hom_ref
+        elif val == 3:
+            return Genotype.unknown
         return Genotype.unknown
 
     def get_chrom(self, val):
