@@ -170,11 +170,11 @@ chrom_test_data = [
 ref_test_data = [
     (
         AffyReader(_affy_path, _grch37_lookup),
-        ["T", "A", "T", "T", ".", ".", "T", "A", "T", "T", ".", "."]
+        ["T", "A", "T", "T", ".", "A", "T", "A", "T", "T", ".", "A"]
     ),
     (
         CytoScanReader(_cytoscan_path, _grch37_lookup),
-        ["A", "T", "C", ".", "."]
+        ["A", "T", "C", ".", "A"]
     ),
     (
         Lumi317kReader(_lumi_317_path, _grch37_lookup),
@@ -198,20 +198,20 @@ ref_test_data = [
 alt_test_data = [
     (
         AffyReader(_affy_path, _grch37_lookup),
-        [["C"], ["C"], ["C"], ["A", "G"], ".", ".",
-         ["C"], ["C"], ["C"], ["A", "G"], ".", "."]
+        [["C"], ["C"], ["C"], ["A", "G"], ".", ["C"],
+         ["C"], ["C"], ["C"], ["A", "G"], ".", ["C"]]
     ),
     (
         CytoScanReader(_cytoscan_path, _grch37_lookup),
-        [["G"], ["C"], ["T"], ".", "."]
+        [["G"], ["C"], ["G", "T"], ".", ["C"]]
     ),
     (
         Lumi317kReader(_lumi_317_path, _grch37_lookup),
-        [["T"], ["G", "T"], ["T"], ["G"], ".", "."]
+        [["T"], ["C", "G", "T"], ["T"], ["G"], ".", "."]
     ),
     (
         Lumi370kReader(_lumi_370_path, _grch37_lookup),
-        [["T"], ["G", "T"], ["T"], ["G"], ".", "."]
+        [["T"], ["C", "G", "T"], ["T"], ["G"], ".", "."]
     )
 ]
 
