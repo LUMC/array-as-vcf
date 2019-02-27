@@ -127,7 +127,10 @@ class OpenArrayReader(Reader):
         if line_sample != self.sample:
             return self.__next__()  # a little recursion, skips
         rs_id = line[self.rsid_col_idx].strip()  # may have spaces :cry:
-        raw_chrom = line[self.chromsome_col_idx]
+        try:
+            raw_chrom = line[self.chromsome_col_idx]
+        except IndexError:  # sometimes the entire row is truncated
+            self.__next__()
         pos = line[self.position_col_idx]
         if empty_string(raw_chrom) or empty_string(pos) or empty_string(rs_id):
             return self.__next__()  # a little recursion, skips
