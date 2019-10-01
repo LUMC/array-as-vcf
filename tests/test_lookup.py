@@ -196,7 +196,14 @@ def test_lookup_table_load(lookup_table):
         "rs3913290": QueryResult("C", ["T"], None),
         "rs1147504": QueryResult("G", ["A"], True),
         "rs10883099": QueryResult("G", ["A"], True),
-        "rs2395029": QueryResult("T", ["G"], False)
+        "rs2395029": QueryResult("T", ["G"], False),
+        "rs2980300": QueryResult("T", ["C"], True),
+        "rs10907175": QueryResult("A", ["C"], False),
+        "rs2887286": QueryResult("T", ["C"], True),
+        "rs307378": QueryResult("T", ["A", "G"], True),
+        "rs6696609": QueryResult("C", ["G", "T"], False),
+        "rs3737728": QueryResult("A", ["C", "G", "T"], True),
+        "rs12939215": QueryResult("A", ["C"], None)
     }
 
 
