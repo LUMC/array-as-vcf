@@ -28,7 +28,8 @@ setup(
     packages=["aav"],
     install_requires=[
         "click",
-        "colorama"
+        "colorama",
+        "werkzeug"
     ],
     entry_points={
         "console_scripts": [
