@@ -131,7 +131,8 @@ class RSLookup(object):
     def __init__(self, build: str,
                  init_d: dict = None,
                  request_timeout: float = 120,
-                 request_tries: int = 1):
+                 request_tries: int = 1,
+                 ensembl_lookup: bool = True):
         """
         Create lookup table.
         :param build: genome build. Either GRCH37 or GRCH38
@@ -142,13 +143,14 @@ class RSLookup(object):
         self.build = build
         self.request_tries = request_tries
         self.request_timeout = request_timeout
+        self.ensembl_lookup = ensembl_lookup
         if init_d:
             self.__rsids = init_d
         else:
             self.__rsids = {}
 
     def __getitem__(self, rs_id: str) -> Optional[QueryResult]:
-        if rs_id not in self.__rsids:
+        if rs_id not in self.__rsids and self.ensembl_lookup:
             self.__rsids[rs_id] = self._get_ensembl(rs_id)
 
         return self.__rsids[rs_id]

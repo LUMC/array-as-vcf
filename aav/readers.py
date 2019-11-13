@@ -136,7 +136,7 @@ class OpenArrayReader(Reader):
             return self.__next__()  # a little recursion, skips
         try:
             q_res = self.lookup_table[rs_id]
-        except (NotFound, ValueError):
+        except (NotFound, ValueError, KeyError):
             ref = '.'
             alt = '.'
             genotype = Genotype.unknown
@@ -307,7 +307,7 @@ class CytoScanReader(Reader):
 
         try:
             q_res = self.lookup_table[id]
-        except (NotFound, ValueError):
+        except (NotFound, ValueError, KeyError):
             ref = '.'
             alt = '.'
             gt = Genotype.unknown

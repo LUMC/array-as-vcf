@@ -214,3 +214,14 @@ def test_lookup_table_dump(lookup_table):
     rs_lookup = RSLookup.from_path(lookup_table, "GRCh37")
     generated = json.loads(rs_lookup.dumps())
     assert generated == original
+
+
+def test_lookup_online():
+    look = RSLookup(build="GRCh37", ensembl_lookup=True)
+    look['rs3934834']
+
+
+def test_lookup_offline():
+    look = RSLookup(build="GRCh37", ensembl_lookup=False)
+    with pytest.raises(KeyError):
+        look['rs3934834']

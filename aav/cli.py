@@ -61,11 +61,14 @@ def exlude_assays_callback(ctx, param, value) -> Optional[Set[str]]:
               callback=exlude_assays_callback,
               help="Optional comma-separated list of assay IDs "
                    "for OpenArray to ignore")
+@click.option("--ensembl-lookup/--no-ensembl-lookup", default=False,
+              help="Should the lookup of rsIDs from Ensembl be disabled")
 def convert(path: str, build: str, sample_name: str,
             chr_prefix: Optional[str],
             lookup_table: Optional[str], dump: Optional[str],
             encoding: Optional[str],
-            exclude_assays: Optional[Set[str]]):
+            exclude_assays: Optional[Set[str]],
+            ensembl_lookup: bool):
     true_path = Path(path)
     try:
         reader_cls = autodetect_reader(true_path, encoding=encoding)
@@ -77,9 +80,10 @@ def convert(path: str, build: str, sample_name: str,
         )
 
     if lookup_table is None:
-        rs_look = RSLookup(build=build)
+        rs_look = RSLookup(build=build, ensembl_lookup=ensembl_lookup)
     else:
-        rs_look = RSLookup.from_path(Path(lookup_table), build=build)
+        rs_look = RSLookup.from_path(Path(lookup_table), build=build,
+                                     ensembl_lookup=ensembl_lookup)
 
     green_message(
         f"Initialized lookup table with {len(rs_look)} initial elements."
