@@ -27,8 +27,7 @@ setup(
     license="MIT",
     packages=["aav"],
     install_requires=[
-        "click",
-        "colorama"
+        "click"
     ],
     entry_points={
         "console_scripts": [

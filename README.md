@@ -19,7 +19,6 @@ Binary formats are not (yet) supported.
 * Python 3.6
 * click
 * requests
-* colorama
 
 # Development requirements
 
