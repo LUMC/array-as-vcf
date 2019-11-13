@@ -8,7 +8,6 @@ aav.readers
 """
 from functools import reduce
 from math import log10
-from pathlib import Path
 from typing import Optional, List, Type, Tuple, Set
 
 from .variation import (Variant, InfoFieldNumber, InfoField, Genotype,
@@ -29,10 +28,10 @@ class Reader(object):
 
     Readers are iterators that produce variants
     """
-    def __init__(self, path: Path, n_header_lines: int = 0,
+    def __init__(self, path: str, n_header_lines: int = 0,
                  encoding: Optional[str] = None):
         self.path = path
-        self.handle = self.path.open(mode="r", encoding=encoding)
+        self.handle = open(path, mode="r", encoding=encoding)
         self.header_lines = []
 
         self.header_fields = [
@@ -54,7 +53,7 @@ class Reader(object):
 
 
 class OpenArrayReader(Reader):
-    def __init__(self, path: Path, lookup_table: RSLookup, sample: str,
+    def __init__(self, path: str, lookup_table: RSLookup, sample: str,
                  qual: int = 100, prefix_chr: Optional[str] = None,
                  encoding: Optional[str] = None,
                  exclude_assays: Optional[Set[str]] = None):
@@ -194,7 +193,7 @@ class AffyReader(Reader):
     3: hom_alt
     """
 
-    def __init__(self, path: Path,
+    def __init__(self, path: str,
                  lookup_table: RSLookup,
                  qual: int = 100,
                  prefix_chr: Optional[str] = None,
@@ -363,7 +362,7 @@ class LumiReader(Reader):
     The first two columns (rs id and chr) may be switched around
     """
 
-    def __init__(self, path: Path,
+    def __init__(self, path: str,
                  lookup_table: RSLookup,
                  prefix_chr: Optional[str] = None,
                  qual=100,
@@ -469,17 +468,17 @@ class Lumi317kReader(LumiReader):
         return line_items[1]
 
 
-def autodetect_reader(path: Path,
+def autodetect_reader(path: str,
                       encoding: Optional[str] = None) -> Type[Reader]:
     """
     Detect type of reader for a certain array path
-    :param path: instance of Path pointing to path
+    :param path: instance of string pointing to path
     :param encoding: optional encoding of file
     :return: Reader class (NOT instance)
     :raises: NotImplementedError for unknown types.
     """
     pot_affy = None
-    with path.open(encoding=encoding, mode="r") as handle:
+    with open(path, encoding=encoding, mode="r") as handle:
         for i, line in enumerate(handle):
             if i == 0 and "Affymetrix" in line:
                 pot_affy = line

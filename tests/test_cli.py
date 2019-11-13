@@ -2,23 +2,17 @@
 test_cli.py
 
 """
-from pathlib import Path
+import os
+
 from click.testing import CliRunner
 
 from aav.cli import convert
 
-_lumi_317_path = (
-    Path(__file__).parent / Path("data") / Path("lumi_317_test.txt")
-)
-_lumi_370_path = (
-    Path(__file__).parent / Path("data") / Path("lumi_370_test.txt")
-)
-_affy_path = (
-    Path(__file__).parent / Path("data") / Path("affy_test.txt")
-)
-_cytoscan_path = (
-    Path(__file__).parent / Path("data") / Path("cytoscan_test.txt")
-)
+_lumi_317_path = os.path.join("tests", "data", "lumi_317_test.txt")
+_lumi_370_path = os.path.join("tests", "data", "lumi_370_test.txt")
+_affy_path = os.path.join("tests", "data", "affy_test.txt")
+_cytoscan_path = os.path.join("tests", "data", "cytoscan_test.txt")
+_open_array_path = os.path.join("tests", "data", "open_array_test.txt")
 
 
 def test_no_args():

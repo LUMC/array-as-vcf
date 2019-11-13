@@ -9,7 +9,6 @@ aav.cli
 
 import click
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Optional, Set
 
 from .readers import autodetect_reader, OpenArrayReader
@@ -69,9 +68,8 @@ def convert(path: str, build: str, sample_name: str,
             encoding: Optional[str],
             exclude_assays: Optional[Set[str]],
             ensembl_lookup: bool):
-    true_path = Path(path)
     try:
-        reader_cls = autodetect_reader(true_path, encoding=encoding)
+        reader_cls = autodetect_reader(path, encoding=encoding)
     except NotImplementedError:
         raise click.FileError("Could not detect type of array.")
     else:
@@ -82,7 +80,7 @@ def convert(path: str, build: str, sample_name: str,
     if lookup_table is None:
         rs_look = RSLookup(build=build, ensembl_lookup=ensembl_lookup)
     else:
-        rs_look = RSLookup.from_path(Path(lookup_table), build=build,
+        rs_look = RSLookup.from_path(lookup_table, build=build,
                                      ensembl_lookup=ensembl_lookup)
 
     green_message(
@@ -92,12 +90,12 @@ def convert(path: str, build: str, sample_name: str,
     green_message("Start conversion.")
 
     if reader_cls == OpenArrayReader:
-        reader = reader_cls(true_path, lookup_table=rs_look,
+        reader = reader_cls(path, lookup_table=rs_look,
                             sample=sample_name, prefix_chr=chr_prefix,
                             encoding=encoding,
                             exclude_assays=exclude_assays)
     else:
-        reader = reader_cls(true_path, lookup_table=rs_look,
+        reader = reader_cls(path, lookup_table=rs_look,
                             prefix_chr=chr_prefix, encoding=encoding)
 
     print(reader.vcf_header(sample_name), end='')
@@ -112,5 +110,5 @@ def convert(path: str, build: str, sample_name: str,
 
     if dump is not None:
         green_message("Dumping lookup table.")
-        with Path(dump).open("w") as dhandle:
+        with open(dump, "w") as dhandle:
             dhandle.write(rs_look.dumps())

@@ -7,14 +7,14 @@ test_lookup.py
 :license: MIT
 """
 
-from aav.lookup import query_ensembl, RSLookup, QueryResult
-from datetime import datetime
-
-from pathlib import Path
+import os
 import json
+from datetime import datetime
 
 import pytest
 from requests.exceptions import Timeout
+
+from aav.lookup import query_ensembl, RSLookup, QueryResult
 
 
 @pytest.fixture
@@ -29,8 +29,7 @@ def grch38_lookup():
 
 @pytest.fixture
 def lookup_table():
-    return (Path(__file__).parent / Path("data")
-            / Path("lookup_table_test.json"))
+    return os.path.join("tests", "data", "lookup_table_test.json")
 
 
 def test_query_ensembl_known_rsid_grch38():
@@ -207,7 +206,7 @@ def test_lookup_table_load(lookup_table):
 
 
 def test_lookup_table_dump(lookup_table):
-    with lookup_table.open("r") as handle:
+    with open(lookup_table, "r") as handle:
         original = json.load(handle)
 
     rs_lookup = RSLookup.from_path(lookup_table, "GRCh37")

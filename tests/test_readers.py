@@ -7,9 +7,11 @@ test_readers.py
 
 :license: MIT
 """
+import os
 from datetime import date
-from pathlib import Path
+
 import pytest
+
 from aav import __version__
 from aav.readers import (AffyReader, CytoScanReader,
                          Lumi317kReader, Lumi370kReader,
@@ -26,26 +28,15 @@ def grch37_lookup():
 
 @pytest.fixture(scope="module")
 def test_lookup_table():
-    lookup_path = (Path(__file__).parent / Path("data")
-                   / Path("lookup_table_test.json"))
+    lookup_path = os.path.join("tests", "data", "lookup_table_test.json")
     return RSLookup.from_path(lookup_path, build="GRCh37")
 
 
-_lumi_317_path = (
-    Path(__file__).parent / Path("data") / Path("lumi_317_test.txt")
-)
-_lumi_370_path = (
-    Path(__file__).parent / Path("data") / Path("lumi_370_test.txt")
-)
-_affy_path = (
-    Path(__file__).parent / Path("data") / Path("affy_test.txt")
-)
-_cytoscan_path = (
-    Path(__file__).parent / Path("data") / Path("cytoscan_test.txt")
-)
-_open_array_path = (
-    Path(__file__).parent / Path("data") / Path("open_array_test.txt")
-)
+_lumi_317_path = os.path.join("tests", "data", "lumi_317_test.txt")
+_lumi_370_path = os.path.join("tests", "data", "lumi_370_test.txt")
+_affy_path = os.path.join("tests", "data", "affy_test.txt")
+_cytoscan_path = os.path.join("tests", "data", "cytoscan_test.txt")
+_open_array_path = os.path.join("tests", "data", "open_array_test.txt")
 
 
 @pytest.fixture

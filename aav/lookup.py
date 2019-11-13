@@ -7,7 +7,6 @@ aav.lookup
 :license: MIT
 """
 import requests
-from pathlib import Path
 from typing import List, NamedTuple, Dict, Optional
 
 import json
@@ -170,9 +169,9 @@ class RSLookup(object):
         return len(self.__rsids)
 
     @classmethod
-    def from_path(cls, path: Path, build: str, request_timeout: float = 120,
+    def from_path(cls, path: str, build: str, request_timeout: float = 120,
                   request_tries: int = 1):
-        with path.open() as handle:
+        with open(path, 'r') as handle:
             js = handle.read()
         init_d = deserialize_query_results(js)
         return cls(build, init_d, request_timeout=request_timeout,
