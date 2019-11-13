@@ -85,7 +85,7 @@ def test_lookup_succeed_grch37(grch37_lookup):
 
 
 def test_lookup_fail_grch37(grch37_lookup):
-    with pytest.raises(RuntimeError):
+    with pytest.raises(KeyError, match='rs5611644432'):
         grch37_lookup['rs5611644432']
 
 
@@ -96,7 +96,7 @@ def test_lookup_succeed_grhc38(grch38_lookup):
 
 
 def test_lookup_fail_grch38(grch38_lookup):
-    with pytest.raises(RuntimeError):
+    with pytest.raises(KeyError, match='rs5611644432'):
         grch38_lookup['rs5611644432']
 
 
@@ -128,13 +128,13 @@ def test_lookup_speed_grch38(grch38_lookup):
 
 def test_lookup_timeout():
     look = RSLookup(build="GRCh37", request_timeout=0.0001)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError, match='rs56'):
         look['rs56']
 
 
 def test_lookup_timeout_tries():
     look = RSLookup(build="GRCh37", request_timeout=0.0001, request_tries=5)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError, match='r56'):
         look['r56']
 
 

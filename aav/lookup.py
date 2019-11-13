@@ -157,9 +157,9 @@ class RSLookup(object):
         for _ in range(self.request_tries):
             try:
                 return query_ensembl(rs_id, self.build, self.request_timeout)
-            except (requests.Timeout, requests.HTTPError):
+            except (requests.Timeout, requests.HTTPError, RuntimeError):
                 continue
-        raise ValueError("Too many tries for request")
+        raise KeyError(f"Failed to retrieve {rs_id} from ensembl")
 
     def dumps(self) -> str:
         """Dump table to json-formatted string"""

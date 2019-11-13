@@ -133,7 +133,7 @@ class OpenArrayReader(Reader):
             return self.__next__()  # a little recursion, skips
         try:
             q_res = self.lookup_table[rs_id]
-        except (RuntimeError, ValueError, KeyError):
+        except KeyError:
             ref = '.'
             alt = '.'
             genotype = Genotype.unknown
@@ -221,7 +221,7 @@ class AffyReader(Reader):
         rs_id = line[2]
         try:
             q_res = self.lookup_table[rs_id]
-        except (ValueError, RuntimeError, KeyError):
+        except KeyError:
             ref = '.'
             alt = '.'
             gt = Genotype.unknown
