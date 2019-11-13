@@ -14,7 +14,6 @@ from pathlib import Path
 import json
 
 import pytest
-from werkzeug.exceptions import NotFound
 from requests.exceptions import Timeout
 
 
@@ -70,7 +69,7 @@ def test_query_ensembl_unknown_build():
 
 
 def test_unknown_rsid():
-    with pytest.raises(NotFound) as exc:
+    with pytest.raises(RuntimeError) as exc:
         query_ensembl("rs5611644432", "GRCh37")
         assert "rsID not found for human" in str(exc)
 
@@ -87,7 +86,7 @@ def test_lookup_succeed_grch37(grch37_lookup):
 
 
 def test_lookup_fail_grch37(grch37_lookup):
-    with pytest.raises(NotFound):
+    with pytest.raises(RuntimeError):
         grch37_lookup['rs5611644432']
 
 
@@ -98,7 +97,7 @@ def test_lookup_succeed_grhc38(grch38_lookup):
 
 
 def test_lookup_fail_grch38(grch38_lookup):
-    with pytest.raises(NotFound):
+    with pytest.raises(RuntimeError):
         grch38_lookup['rs5611644432']
 
 

@@ -7,7 +7,6 @@ aav.lookup
 :license: MIT
 """
 import requests
-from werkzeug.exceptions import NotFound
 from pathlib import Path
 from typing import List, NamedTuple, Dict, Optional
 
@@ -92,7 +91,7 @@ def query_ensembl(rs_id: str, build: str,
             pass
         else:
             if "not found for human" in error:
-                raise NotFound("rsID not found for human")
+                raise RuntimeError("rsID not found for human")
         raise requests.HTTPError("Request failed with code {0}".format(
             response.status_code
         ))
@@ -101,7 +100,7 @@ def query_ensembl(rs_id: str, build: str,
     try:
         allele_string = j.get("mappings", [{}])[0].get("allele_string", "")
     except IndexError:  # mapping may be `mapping: []` when it does not map to genome # noqa
-        raise NotFound("rsID does not map to genome")
+        raise RuntimeError("rsID does not map to genome")
 
     minor_allele = j.get("minor_allele")
 

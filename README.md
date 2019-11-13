@@ -20,7 +20,6 @@ Binary formats are not (yet) supported.
 * click
 * requests
 * colorama
-* werkzeug
 
 # Development requirements
 

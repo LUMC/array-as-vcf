@@ -11,8 +11,6 @@ from math import log10
 from pathlib import Path
 from typing import Optional, List, Type, Tuple, Set
 
-from werkzeug.exceptions import NotFound
-
 from .variation import (Variant, InfoFieldNumber, InfoField, Genotype,
                         InfoHeaderLine, GT_FORMAT, VCF_v_4_2,
                         program_header, date_header, chrom_header,
@@ -136,7 +134,7 @@ class OpenArrayReader(Reader):
             return self.__next__()  # a little recursion, skips
         try:
             q_res = self.lookup_table[rs_id]
-        except (NotFound, ValueError, KeyError):
+        except (RuntimeError, ValueError, KeyError):
             ref = '.'
             alt = '.'
             genotype = Genotype.unknown
@@ -224,7 +222,7 @@ class AffyReader(Reader):
         rs_id = line[2]
         try:
             q_res = self.lookup_table[rs_id]
-        except (NotFound, ValueError):
+        except (ValueError, RuntimeError, KeyError):
             ref = '.'
             alt = '.'
             gt = Genotype.unknown
@@ -307,7 +305,7 @@ class CytoScanReader(Reader):
 
         try:
             q_res = self.lookup_table[id]
-        except (NotFound, ValueError, KeyError):
+        except (ValueError, KeyError, RuntimeError):
             ref = '.'
             alt = '.'
             gt = Genotype.unknown
@@ -394,7 +392,7 @@ class LumiReader(Reader):
 
         try:
             q_res = self.lookup_table[rs_id]
-        except (NotFound, ValueError):
+        except (ValueError, RuntimeError, KeyError):
             ref = '.'
             alt = '.'
             gt = Genotype.unknown
