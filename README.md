@@ -17,7 +17,6 @@ Binary formats are not (yet) supported.
 # Requirements
 
 * Python 3.6
-* click
 * requests
 
 # Development requirements

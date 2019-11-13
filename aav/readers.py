@@ -493,6 +493,6 @@ def autodetect_reader(path: str,
             elif i == 17 and line.startswith("Assay Name"):
                 return OpenArrayReader
             elif i >= 18:
-                raise NotImplementedError
+                raise NotImplementedError("Could not detect type of array")
 
     raise NotImplementedError

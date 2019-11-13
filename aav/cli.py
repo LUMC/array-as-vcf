@@ -7,108 +7,79 @@ aav.cli
 :license: MIT
 """
 
-import click
-from datetime import datetime, timezone
-from typing import Optional, Set
+import argparse
+import logging
 
 from .readers import autodetect_reader, OpenArrayReader
 from .lookup import RSLookup
 
+logging.basicConfig(level=logging.INFO)
 
-def green_message(msg: str) -> None:
-    pre_msg = "[ {0} ]  ".format(
-        datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
+
+def get_parser():
+    """ Argument parsing """
+    parser = argparse.ArgumentParser(
+        description="Convert an array file to VCF format",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    click.echo(click.style(pre_msg + msg, fg="green"), err=True)
+
+    parser.add_argument("--path", "-p", required=True,
+                        help="Path to array file")
+    parser.add_argument("--build", "-b", choices=["GRCh37", "GRCh38"],
+                        default="GRCh37", help="Genome build")
+    parser.add_argument("--sample-name", "-s", required=True,
+                        help="Name of sample in VCF file")
+    parser.add_argument("--chr-prefix", "-c", required=False,
+                        help="Prefix to chromosome names")
+    parser.add_argument("--lookup-table", "-l", required=False,
+                        help="Path to existing lookup table for rsIDs")
+    parser.add_argument("--dump", "-d", required=False,
+                        help="Path to write generated lookup table")
+    parser.add_argument("--encoding", default="UTF-8",
+                        help="Encoding of the array file")
+    parser.add_argument("--exclude-assays", nargs='+', required=False,
+                        help="Assay IDs for OpenArray to ignore")
+    parser.add_argument("--no-ensembl-lookup", action="store_true",
+                        help="Lookup missing rsIDs on Ensembl")
+    return parser
 
 
-def exlude_assays_callback(ctx, param, value) -> Optional[Set[str]]:
-    if value is None:
-        return None
+def convert():
+    parser = get_parser()
+    args = parser.parse_args()
+    ensembl_lookup = not args.no_ensembl_lookup
 
-    return set(value.split(","))
+    reader_cls = autodetect_reader(args.path, encoding=args.encoding)
+    logging.info(f"Detected array file with type: {reader_cls.__name__}")
 
-
-@click.command()
-@click.option("-p", "--path",
-              type=click.Path(exists=True, readable=True),
-              required=True,
-              help="Path to array file")
-@click.option("-b", "--build",
-              type=click.Choice(["GRCh37", "GRCh38"]),
-              help="Genome build. Default = GRCh37", default="GRCh37")
-@click.option("-s", "--sample-name",
-              type=click.STRING,
-              help="Name of sample in VCF file",
-              required=True)
-@click.option("-c", "--chr-prefix",
-              type=click.STRING,
-              required=False,
-              help="Optional prefix to chromosome names")
-@click.option("-l", "--lookup-table",
-              type=click.Path(exists=True, readable=True),
-              required=False,
-              help="Optional path to existing lookup table for rsIDs.")
-@click.option("-d", "--dump",
-              type=click.Path(writable=True),
-              required=False,
-              help="Optional path to write generated lookup table")
-@click.option("--encoding", type=click.STRING, required=False,
-              help="Optional encoding of array file. "
-                   "Encoding defaults to UTF-8 if not given")
-@click.option("--exclude-assays", type=click.STRING, required=False,
-              callback=exlude_assays_callback,
-              help="Optional comma-separated list of assay IDs "
-                   "for OpenArray to ignore")
-@click.option("--ensembl-lookup/--no-ensembl-lookup", default=False,
-              help="Should the lookup of rsIDs from Ensembl be disabled")
-def convert(path: str, build: str, sample_name: str,
-            chr_prefix: Optional[str],
-            lookup_table: Optional[str], dump: Optional[str],
-            encoding: Optional[str],
-            exclude_assays: Optional[Set[str]],
-            ensembl_lookup: bool):
-    try:
-        reader_cls = autodetect_reader(path, encoding=encoding)
-    except NotImplementedError:
-        raise click.FileError("Could not detect type of array.")
+    if args.lookup_table is None:
+        rs_look = RSLookup(build=args.build, ensembl_lookup=ensembl_lookup)
     else:
-        green_message(
-            "Detected array file with type: {0}.".format(reader_cls.__name__)
-        )
-
-    if lookup_table is None:
-        rs_look = RSLookup(build=build, ensembl_lookup=ensembl_lookup)
-    else:
-        rs_look = RSLookup.from_path(lookup_table, build=build,
+        rs_look = RSLookup.from_path(args.lookup_table, build=args.build,
                                      ensembl_lookup=ensembl_lookup)
 
-    green_message(
-        f"Initialized lookup table with {len(rs_look)} initial elements."
-    )
+    logging.info(f"Initialized lookup table with {len(rs_look)} elements.")
 
-    green_message("Start conversion.")
+    logging.info(f"Start conversion.")
 
     if reader_cls == OpenArrayReader:
-        reader = reader_cls(path, lookup_table=rs_look,
-                            sample=sample_name, prefix_chr=chr_prefix,
-                            encoding=encoding,
-                            exclude_assays=exclude_assays)
+        reader = reader_cls(args.path, lookup_table=rs_look,
+                            sample=args.sample_name,
+                            prefix_chr=args.chr_prefix,
+                            encoding=args.encoding,
+                            exclude_assays=args.exclude_assays)
     else:
-        reader = reader_cls(path, lookup_table=rs_look,
-                            prefix_chr=chr_prefix, encoding=encoding)
+        reader = reader_cls(args.path, lookup_table=rs_look,
+                            prefix_chr=args.chr_prefix, encoding=args.encoding)
 
-    print(reader.vcf_header(sample_name), end='')
+    print(reader.vcf_header(args.sample_name), end='')
 
-    i = 0
-
-    for record in reader:
+    for i, record in enumerate(reader, 1):
         print(record.vcf_line)
-        i += 1
 
-    green_message("Converted {0} records.".format(i))
+    logging.info("Converted {0} records.".format(i))
 
-    if dump is not None:
-        green_message("Dumping lookup table.")
-        with open(dump, "w") as dhandle:
+    if args.dump is not None:
+        logging.info("Dumping lookup table.")
+        with open(args.dump, "w") as dhandle:
             dhandle.write(rs_look.dumps())
