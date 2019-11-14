@@ -113,8 +113,7 @@ genotype_test_data = [
     ),
     (
         cytoscan_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het, Genotype.unknown,
-         Genotype.unknown]
+        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het]
     ),
     (
         lumi_317_reader(_grch37_lookup),
@@ -156,11 +155,11 @@ chrom_test_data = [
     ),
     (
         CytoScanReader(_cytoscan_path, _grch37_lookup),
-        ["1", "1", "1", "X", "X"]
+        ["1", "1", "1"]
     ),
     (
         CytoScanReader(_cytoscan_path, _grch37_lookup, prefix_chr="chr"),
-        ["chr1", "chr1", "chr1", "chrX", "chrX"]
+        ["chr1", "chr1", "chr1"]
     ),
     (
         Lumi317kReader(_lumi_317_path, _grch37_lookup),
@@ -199,7 +198,7 @@ ref_test_data = [
     ),
     (
         CytoScanReader(_cytoscan_path, _grch37_lookup),
-        ["A", "T", "C", ".", "A"]
+        ["A", "T", "C"]
     ),
     (
         Lumi317kReader(_lumi_317_path, _grch37_lookup),
@@ -254,7 +253,7 @@ def test_affy_reader_amount(affy_reader):
 
 
 def test_cytoscan_reader_amount(cytoscan_reader):
-    assert len(list(cytoscan_reader)) == 5
+    assert len(list(cytoscan_reader)) == 3
 
 
 def test_lumi317_reader_amount(lumi_317_reader):
@@ -403,4 +402,12 @@ def test_openarray_unknown_rsid(open_array_reader_no_ensembl):
     standard
     """
     for variant in open_array_reader_no_ensembl:
+        assert variant.ref != '.'
+
+
+def test_cytoscan_unknown_rsid(cytoscan_reader_no_ensembl):
+    """ Variants with missing REF fields are not allowed according to the VCF
+    standard
+    """
+    for variant in cytoscan_reader_no_ensembl:
         assert variant.ref != '.'
