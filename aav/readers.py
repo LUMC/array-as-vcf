@@ -242,38 +242,39 @@ class AffyReader(Reader):
         ]
 
     def __next__(self) -> Variant:
-        line = next(self.handle).strip().split("\t")
-        chrom = self.get_chrom(line[3])
-        pos = int(line[4])
-        rs_id = line[2]
-        try:
-            q_res = self.lookup_table[rs_id]
-        except KeyError:
-            ref = '.'
-            alt = '.'
-            gt = Genotype.unknown
-        else:
-            if q_res is None:
-                ref = '.'
-                alt = '.'
-                gt = Genotype.unknown
+        for raw_line in self.handle:
+            line = raw_line.strip().split("\t")
+            chrom = self.get_chrom(line[3])
+            pos = int(line[4])
+            rs_id = line[2]
+            try:
+                q_res = self.lookup_table[rs_id]
+            except KeyError:
+                logger.info(f"Skipping {rs_id}, transcript not found")
+                continue
             else:
-                ref = q_res.ref
-                alt = q_res.alt
-                ref_is_minor = q_res.ref_is_minor
-                gt = self.get_gt(int(line[7]), ref_is_minor)
+                if q_res is None or q_res.ref_is_minor is None:
+                    logger.info(f"Skipping {rs_id}, incomplete data: {q_res}")
+                    continue
+                else:
+                    ref = q_res.ref
+                    alt = q_res.alt
+                    ref_is_minor = q_res.ref_is_minor
+                    gt = self.get_gt(int(line[7]), ref_is_minor)
 
-        infos = [
-            InfoField("ID", line[0], InfoFieldNumber.one),
-            InfoField("AffymetrixSNPsID", line[1], InfoFieldNumber.one),
-            InfoField("log2ratio_AB", line[5], InfoFieldNumber.one),
-            InfoField("N_AB", line[6], InfoFieldNumber.one),
-            InfoField("LOH_likelihood", line[8], InfoFieldNumber.one)
-        ]
+            infos = [
+                InfoField("ID", line[0], InfoFieldNumber.one),
+                InfoField("AffymetrixSNPsID", line[1], InfoFieldNumber.one),
+                InfoField("log2ratio_AB", line[5], InfoFieldNumber.one),
+                InfoField("N_AB", line[6], InfoFieldNumber.one),
+                InfoField("LOH_likelihood", line[8], InfoFieldNumber.one)
+            ]
 
-        return Variant(chrom=chrom, pos=pos, ref=ref, alt=alt,
-                       qual=self.qual, id=rs_id, info_fields=infos,
-                       genotype=gt)
+            return Variant(chrom=chrom, pos=pos, ref=ref, alt=alt,
+                           qual=self.qual, id=rs_id, info_fields=infos,
+                           genotype=gt)
+        else:
+            raise StopIteration
 
     def get_gt(self, val: int, ref_is_minor: bool) -> Genotype:
         if val == 0:

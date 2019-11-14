@@ -107,9 +107,8 @@ genotype_test_data = [
     (
         affy_reader(_grch37_lookup),
         [Genotype.unknown, Genotype.unknown, Genotype.het, Genotype.unknown,
-         Genotype.unknown, Genotype.unknown, Genotype.unknown,
-         Genotype.unknown, Genotype.het, Genotype.unknown,
-         Genotype.unknown, Genotype.unknown]
+         Genotype.unknown, Genotype.unknown, Genotype.het,
+         Genotype.unknown]
     ),
     (
         cytoscan_reader(_grch37_lookup),
@@ -146,12 +145,11 @@ genotype_test_data = [
 chrom_test_data = [
     (
         AffyReader(_affy_path, _grch37_lookup),
-        ["1", "1", "1", "1", "X", "X", "1", "1", "1", "1", "X", "X"]
+        ["1"]*8
     ),
     (
         AffyReader(_affy_path, _grch37_lookup, prefix_chr="chr"),
-        ["chr1", "chr1", "chr1", "chr1", "chrX", "chrX", "chr1", "chr1",
-         "chr1", "chr1", "chrX", "chrX"]
+        ["chr1"]*8
     ),
     (
         CytoScanReader(_cytoscan_path, _grch37_lookup),
@@ -194,7 +192,7 @@ chrom_test_data = [
 ref_test_data = [
     (
         AffyReader(_affy_path, _grch37_lookup),
-        ["T", "A", "T", "T", ".", "A", "T", "A", "T", "T", ".", "A"]
+        ["T", "A", "T", "T", "T", "A", "T", "T"]
     ),
     (
         CytoScanReader(_cytoscan_path, _grch37_lookup),
@@ -222,20 +220,20 @@ ref_test_data = [
 alt_test_data = [
     (
         AffyReader(_affy_path, _grch37_lookup),
-        [["C"], ["C"], ["C"], ["A", "G"], ".", ["C"],
-         ["C"], ["C"], ["C"], ["A", "G"], ".", ["C"]]
+        [["C"], ["C"], ["C"], ["A", "G"], ["C"],
+         ["C"], ["C"], ["A", "G"]]
     ),
     (
         CytoScanReader(_cytoscan_path, _grch37_lookup),
-        [["G"], ["C"], ["G", "T"], ".", ["C"]]
+        [["G"], ["C"], ["G", "T"]]
     ),
     (
         Lumi317kReader(_lumi_317_path, _grch37_lookup),
-        [["T"], ["C", "G", "T"], ["T"], ["G"], ".", "."]
+        [["T"], ["C", "G", "T"], ["T"], ["G"]]
     ),
     (
         Lumi370kReader(_lumi_370_path, _grch37_lookup),
-        [["T"], ["C", "G", "T"], ["T"], ["G"], ".", "."]
+        [["T"], ["C", "G", "T"], ["T"], ["G"]]
     )
 ]
 
@@ -249,7 +247,7 @@ autodetect_reader_data = [
 
 
 def test_affy_reader_amount(affy_reader):
-    assert len(list(affy_reader)) == 12
+    assert len(list(affy_reader)) == 8
 
 
 def test_cytoscan_reader_amount(cytoscan_reader):
@@ -297,8 +295,8 @@ def test_reader_refs(reader, refs):
 
 @pytest.mark.parametrize("reader, alts", alt_test_data)
 def test_reader_alts(reader, alts):
-    for i, rec in enumerate(reader):
-        assert rec.alt == alts[i], 'Position {}'.format(i)
+    found_alt = [x.alt for x in reader]
+    assert found_alt == alts
 
 
 def test_base_reader_header():
@@ -410,4 +408,12 @@ def test_cytoscan_unknown_rsid(cytoscan_reader_no_ensembl):
     standard
     """
     for variant in cytoscan_reader_no_ensembl:
+        assert variant.ref != '.'
+
+
+def test_affy_unknown_rsid(affy_reader_no_ensembl):
+    """ Variants with missing REF fields are not allowed according to the VCF
+    standard
+    """
+    for variant in affy_reader_no_ensembl:
         assert variant.ref != '.'
