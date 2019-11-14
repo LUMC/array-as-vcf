@@ -66,6 +66,7 @@ class OpenArrayReader(Reader):
         self.sample = sample
         self.lookup_table = lookup_table
         self.prefix_chr = prefix_chr
+        self.linecount = 18  # n_header_lines
         if exclude_assays is not None:
             self.exclude_assays = exclude_assays
         else:
@@ -115,53 +116,75 @@ class OpenArrayReader(Reader):
         return self._header_splitted.index("Call")
 
     def __next__(self):
-        raw_line = next(self.handle)
-        if empty_string(raw_line):
-            raise StopIteration  # end of initial list
-        line = raw_line.strip().split("\t")
-        if len(line) < 8:  # may occur if assay design is dumped in file
-            return self.__next__()  # a little recursion, skips
-        assay_id = line[self.assay_id_col_idx]
-        if assay_id in self.exclude_assays:
-            return self.__next__()  # recurse if assay to exclude
-        line_sample = line[self.sample_col_idx]
-        if line_sample != self.sample:
-            return self.__next__()  # a little recursion, skips
-        rs_id = line[self.rsid_col_idx].strip()  # may have spaces :cry:
-        try:
-            raw_chrom = line[self.chromsome_col_idx]
-        except IndexError:  # sometimes the entire row is truncated
-            self.__next__()
-        pos = line[self.position_col_idx]
-        if empty_string(raw_chrom) or empty_string(pos) or empty_string(rs_id):
-            return self.__next__()  # a little recursion, skips
-        try:
-            q_res = self.lookup_table[rs_id]
-        except KeyError:
-            ref = '.'
-            alt = '.'
-            genotype = Genotype.unknown
+        for raw_line in self.handle:
+            self.linecount += 1
+            if empty_string(raw_line):
+                raise StopIteration  # end of initial list
+            line = raw_line.strip().split("\t")
+            if len(line) < 8:  # may occur if assay design is dumped in file
+                logger.info(f"Skipping line {self.linecount}, to few columns")
+                continue
+            assay_id = line[self.assay_id_col_idx]
+            if assay_id in self.exclude_assays:
+                logger.info("Skipping assay {assay_id}")
+                continue
+            line_sample = line[self.sample_col_idx]
+            if line_sample != self.sample:
+                logger.debug(f"Skipping line {self.linecount}, wrong sample")
+                continue
+            rs_id = line[self.rsid_col_idx].strip()  # may have spaces :cry:
+            try:
+                raw_chrom = line[self.chromsome_col_idx]
+            except IndexError:  # sometimes the entire row is truncated
+                logger.info((f"Skipping line {self.linecount}, entire row "
+                            "truncated"))
+                continue
+            pos = line[self.position_col_idx]
+
+            # Skip if fields we need are missing
+            if empty_string(raw_chrom):
+                logger.info((f"Skipping line {self.linecount}, missing "
+                            "chromosome"))
+                continue
+            if empty_string(pos):
+                logger.info((f"Skipping line {self.linecount}, missing "
+                            "position"))
+                continue
+            if empty_string(rs_id):
+                logger.info((f"Skipping line {self.linecount}, missing "
+                            "rs_id"))
+                continue
+
+            # Also skip if the rs_id is not in the lookup_table
+            try:
+                q_res = self.lookup_table[rs_id]
+            except KeyError:
+                logger.info(f"Skipping {rs_id}, transcript not found")
+                continue
+            else:
+                call = line[self.call_col_idx]
+                ref = q_res.ref
+                genotype, alt = self.get_genotype_and_alt(call, ref, q_res.alt)
+
+            assay_name = line[self.assay_name_col_idx]
+            raw_gene_symbol = line[self.gene_symbol_col_idx]
+
+            infos = [
+                InfoField("Assay_Name", assay_name, InfoFieldNumber.one),
+                InfoField("Assay_ID", assay_id, InfoFieldNumber.one)
+            ]
+
+            if not empty_string(raw_gene_symbol):
+                infos.append(InfoField("Gene_Symbol",
+                                       raw_gene_symbol.split(";"),
+                                       InfoFieldNumber.unknown))
+
+            chrom = self.get_chrom(raw_chrom)
+            return Variant(chrom=chrom, pos=int(pos), id=rs_id, ref=ref,
+                           alt=alt, info_fields=infos, qual=self.qual,
+                           genotype=genotype)
         else:
-            call = line[self.call_col_idx]
-            ref = q_res.ref
-            genotype, alt = self.get_genotype_and_alt(call, ref, q_res.alt)
-
-        assay_name = line[self.assay_name_col_idx]
-        raw_gene_symbol = line[self.gene_symbol_col_idx]
-
-        infos = [
-            InfoField("Assay_Name", assay_name, InfoFieldNumber.one),
-            InfoField("Assay_ID", assay_id, InfoFieldNumber.one)
-        ]
-
-        if not empty_string(raw_gene_symbol):
-            infos.append(InfoField("Gene_Symbol", raw_gene_symbol.split(";"),
-                                   InfoFieldNumber.unknown))
-
-        chrom = self.get_chrom(raw_chrom)
-        return Variant(chrom=chrom, pos=int(pos), id=rs_id, ref=ref,
-                       alt=alt, info_fields=infos, qual=self.qual,
-                       genotype=genotype)
+            raise StopIteration
 
     def get_chrom(self, chrom: str) -> str:
         if self.prefix_chr is None:

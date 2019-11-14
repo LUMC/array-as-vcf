@@ -83,18 +83,21 @@ def lumi_370_reader_no_ensembl():
 
 
 @pytest.fixture
-def affy_reader_no_ensembl(lookup):
-    return AffyReader(_affy_path, grch37_lookup)
+def affy_reader_no_ensembl():
+    lookup = grch37_lookup_no_ensembl()
+    return AffyReader(_affy_path, lookup)
 
 
 @pytest.fixture
-def cytoscan_reader_no_ensemble(lookup):
-    return CytoScanReader(_cytoscan_path, grch37_lookup)
+def cytoscan_reader_no_ensembl():
+    lookup = grch37_lookup_no_ensembl()
+    return CytoScanReader(_cytoscan_path, lookup)
 
 
 @pytest.fixture
-def open_array_reader_no_ensemble(lookup):
-    return OpenArrayReader(_open_array_path, test_lookup_table,
+def open_array_reader_no_ensembl():
+    lookup = grch37_lookup_no_ensembl()
+    return OpenArrayReader(_open_array_path, lookup,
                            "e31a0a96465a", encoding="windows-1252")
 
 
@@ -392,4 +395,12 @@ def test_lumi370_unknown_rsid(lumi_370_reader_no_ensembl):
     standard
     """
     for variant in lumi_370_reader_no_ensembl:
+        assert variant.ref != '.'
+
+
+def test_openarray_unknown_rsid(open_array_reader_no_ensembl):
+    """ Variants with missing REF fields are not allowed according to the VCF
+    standard
+    """
+    for variant in open_array_reader_no_ensembl:
         assert variant.ref != '.'
