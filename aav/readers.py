@@ -9,6 +9,7 @@ aav.readers
 from functools import reduce
 from math import log10
 from typing import Optional, List, Type, Tuple, Set
+import logging
 
 from .variation import (Variant, InfoFieldNumber, InfoField, Genotype,
                         InfoHeaderLine, GT_FORMAT, VCF_v_4_2,
@@ -20,6 +21,9 @@ from .utils import comma_float, empty_string
 
 GRCH37_LOOKUP = RSLookup("GRCh37")
 GRCH38_LOOKUP = RSLookup("GRCh38")
+
+
+logger = logging.getLogger('ArrayReader')
 
 
 class Reader(object):
@@ -391,15 +395,13 @@ class LumiReader(Reader):
 
         try:
             q_res = self.lookup_table[rs_id]
-        except (ValueError, RuntimeError, KeyError):
-            ref = '.'
-            alt = '.'
-            gt = Genotype.unknown
+        except KeyError:
+            logger.info(f"Skipping {rs_id}, transcript not found")
+            return self.__next__()
         else:
             if q_res is None or q_res.ref_is_minor is None:
-                ref = '.'
-                alt = '.'
-                gt = Genotype.unknown
+                logger.info(f"Skipping {rs_id}, incomplete data: {q_res}")
+                return self.__next__()
             else:
                 ref = q_res.ref
                 alt = q_res.alt

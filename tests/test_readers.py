@@ -27,6 +27,11 @@ def grch37_lookup():
 
 
 @pytest.fixture(scope="module")
+def grch37_lookup_no_ensembl():
+    return RSLookup(build="GRCh37", ensembl_lookup=False)
+
+
+@pytest.fixture(scope="module")
 def test_lookup_table():
     lookup_path = os.path.join("tests", "data", "lookup_table_test.json")
     return RSLookup.from_path(lookup_path, build="GRCh37")
@@ -65,6 +70,34 @@ def open_array_reader(test_lookup_table):
                            "e31a0a96465a", encoding="windows-1252")
 
 
+@pytest.fixture
+def lumi_317_reader_no_ensembl():
+    lookup = grch37_lookup_no_ensembl()
+    return Lumi317kReader(_lumi_317_path, lookup)
+
+
+@pytest.fixture
+def lumi_370_reader_no_ensembl():
+    lookup = grch37_lookup_no_ensembl()
+    return Lumi370kReader(_lumi_370_path, lookup)
+
+
+@pytest.fixture
+def affy_reader_no_ensembl(lookup):
+    return AffyReader(_affy_path, grch37_lookup)
+
+
+@pytest.fixture
+def cytoscan_reader_no_ensemble(lookup):
+    return CytoScanReader(_cytoscan_path, grch37_lookup)
+
+
+@pytest.fixture
+def open_array_reader_no_ensemble(lookup):
+    return OpenArrayReader(_open_array_path, test_lookup_table,
+                           "e31a0a96465a", encoding="windows-1252")
+
+
 _grch37_lookup = grch37_lookup()
 _test_lookup = test_lookup_table()
 genotype_test_data = [
@@ -82,13 +115,11 @@ genotype_test_data = [
     ),
     (
         lumi_317_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het, Genotype.unknown,
-         Genotype.unknown, Genotype.unknown]
+        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het, Genotype.unknown]
     ),
     (
         lumi_370_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het, Genotype.unknown,
-         Genotype.unknown, Genotype.unknown]
+        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het, Genotype.unknown]
     ),
     (
         open_array_reader(_test_lookup),
@@ -130,19 +161,19 @@ chrom_test_data = [
     ),
     (
         Lumi317kReader(_lumi_317_path, _grch37_lookup),
-        ["1", "1", "1", "1", "X", "X"]
+        ["1", "1", "1", "1"]
     ),
     (
         Lumi317kReader(_lumi_317_path, _grch37_lookup, prefix_chr="chr"),
-        ["chr1", "chr1", "chr1", "chr1", "chrX", "chrX"]
+        ["chr1", "chr1", "chr1", "chr1"]
     ),
     (
         Lumi370kReader(_lumi_370_path, _grch37_lookup),
-        ["1", "1", "1", "1", "X", "X"]
+        ["1", "1", "1", "1"]
     ),
     (
         Lumi370kReader(_lumi_370_path, _grch37_lookup, prefix_chr="chr"),
-        ["chr1", "chr1", "chr1", "chr1", "chrX", "chrX"]
+        ["chr1", "chr1", "chr1", "chr1"]
     ),
     (
         OpenArrayReader(_open_array_path, _test_lookup, prefix_chr="chr",
@@ -169,11 +200,11 @@ ref_test_data = [
     ),
     (
         Lumi317kReader(_lumi_317_path, _grch37_lookup),
-        ["C", "A", "C", "A", ".", "."]
+        ["C", "A", "C", "A"]
     ),
     (
         Lumi370kReader(_lumi_370_path, _grch37_lookup),
-        ["C", "A", "C", "A", ".", "."]
+        ["C", "A", "C", "A"]
     ),
     (
         OpenArrayReader(_open_array_path, _test_lookup,
@@ -224,11 +255,11 @@ def test_cytoscan_reader_amount(cytoscan_reader):
 
 
 def test_lumi317_reader_amount(lumi_317_reader):
-    assert len(list(lumi_317_reader)) == 6
+    assert len(list(lumi_317_reader)) == 4
 
 
 def test_lumi370_reader_amount(lumi_370_reader):
-    assert len(list(lumi_370_reader)) == 6
+    assert len(list(lumi_370_reader)) == 4
 
 
 def test_open_array_reader_amount(open_array_reader):
@@ -346,3 +377,19 @@ def test_open_array_reader_header(open_array_reader):
         "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\te31a0a96465a\n"
     ).format(date_str, __version__)
     assert header == exp
+
+
+def test_lumi317_unknown_rsid(lumi_317_reader_no_ensembl):
+    """ Variants with missing REF fields are not allowed according to the VCF
+    standard
+    """
+    for variant in lumi_317_reader_no_ensembl:
+        assert variant.ref != '.'
+
+
+def test_lumi370_unknown_rsid(lumi_370_reader_no_ensembl):
+    """ Variants with missing REF fields are not allowed according to the VCF
+    standard
+    """
+    for variant in lumi_370_reader_no_ensembl:
+        assert variant.ref != '.'

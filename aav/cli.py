@@ -77,7 +77,10 @@ def convert():
     for i, record in enumerate(reader, 1):
         print(record.vcf_line)
 
-    logging.info("Converted {0} records.".format(i))
+    try:
+        logging.info("Converted {0} records.".format(i))
+    except UnboundLocalError:  # if there were 0 records, i is unset
+        logging.info("Converted 0 records.")
 
     if args.dump is not None:
         logging.info("Dumping lookup table.")

@@ -170,7 +170,7 @@ class RSLookup(object):
 
     @classmethod
     def from_path(cls, path: str, build: str, request_timeout: float = 120,
-                  request_tries: int = 1):
+                  request_tries: int = 1, ensembl_lookup: bool = True):
         with open(path, 'r') as handle:
             js = handle.read()
         init_d = deserialize_query_results(js)
