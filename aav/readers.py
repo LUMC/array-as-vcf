@@ -122,11 +122,11 @@ class OpenArrayReader(Reader):
                 raise StopIteration  # end of initial list
             line = raw_line.strip().split("\t")
             if len(line) < 8:  # may occur if assay design is dumped in file
-                logger.info(f"Skipping line {self.linecount}, to few columns")
+                logger.debug(f"Skipping line {self.linecount}, to few columns")
                 continue
             assay_id = line[self.assay_id_col_idx]
             if assay_id in self.exclude_assays:
-                logger.info("Skipping assay {assay_id}")
+                logger.debug("Skipping excluded assay {assay_id}")
                 continue
             line_sample = line[self.sample_col_idx]
             if line_sample != self.sample:
@@ -136,30 +136,30 @@ class OpenArrayReader(Reader):
             try:
                 raw_chrom = line[self.chromsome_col_idx]
             except IndexError:  # sometimes the entire row is truncated
-                logger.info((f"Skipping line {self.linecount}, entire row "
-                            "truncated"))
+                logger.debug((f"Skipping line {self.linecount}, entire row "
+                              "truncated"))
                 continue
             pos = line[self.position_col_idx]
 
             # Skip if fields we need are missing
             if empty_string(raw_chrom):
-                logger.info((f"Skipping line {self.linecount}, missing "
-                            "chromosome"))
+                logger.debug((f"Skipping line {self.linecount}, missing "
+                              "chromosome"))
                 continue
             if empty_string(pos):
-                logger.info((f"Skipping line {self.linecount}, missing "
-                            "position"))
+                logger.debug((f"Skipping line {self.linecount}, missing "
+                              "position"))
                 continue
             if empty_string(rs_id):
-                logger.info((f"Skipping line {self.linecount}, missing "
-                            "rs_id"))
+                logger.debug((f"Skipping line {self.linecount}, missing "
+                              "rs_id"))
                 continue
 
             # Also skip if the rs_id is not in the lookup_table
             try:
                 q_res = self.lookup_table[rs_id]
             except KeyError:
-                logger.info(f"Skipping {rs_id}, transcript not found")
+                logger.debug(f"Skipping {rs_id}, transcript not found")
                 continue
             else:
                 call = line[self.call_col_idx]
@@ -334,11 +334,11 @@ class CytoScanReader(Reader):
             try:
                 q_res = self.lookup_table[rs_id]
             except KeyError:
-                logger.info(f"Skipping {rs_id}, transcript not found")
+                logger.debug(f"Skipping {rs_id}, transcript not found")
                 continue
             else:
                 if q_res is None or q_res.ref_is_minor is None:
-                    logger.info(f"Skipping {rs_id}, incomplete data: {q_res}")
+                    logger.debug(f"Skipping {rs_id}, incomplete data: {q_res}")
                     continue
                 else:
                     ref = q_res.ref
