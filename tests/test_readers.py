@@ -21,17 +21,14 @@ from aav.lookup import RSLookup
 from aav.variation import Genotype
 
 
-@pytest.fixture(scope="module")
 def grch37_lookup():
     return RSLookup(build="GRCh37", request_tries=3)
 
 
-@pytest.fixture(scope="module")
 def grch37_lookup_no_ensembl():
     return RSLookup(build="GRCh37", ensembl_lookup=False)
 
 
-@pytest.fixture(scope="module")
 def test_lookup_table():
     lookup_path = os.path.join("tests", "data", "lookup_table_test.json")
     return RSLookup.from_path(lookup_path, build="GRCh37")
@@ -45,28 +42,28 @@ _open_array_path = os.path.join("tests", "data", "open_array_test.txt")
 
 
 @pytest.fixture
-def lumi_317_reader(grch37_lookup):
-    return Lumi317kReader(_lumi_317_path, grch37_lookup)
+def lumi_317_reader():
+    return Lumi317kReader(_lumi_317_path, grch37_lookup())
 
 
 @pytest.fixture
-def lumi_370_reader(grch37_lookup):
-    return Lumi370kReader(_lumi_370_path, grch37_lookup)
+def lumi_370_reader():
+    return Lumi370kReader(_lumi_370_path, grch37_lookup())
 
 
 @pytest.fixture
-def affy_reader(grch37_lookup):
-    return AffyReader(_affy_path, grch37_lookup)
+def affy_reader():
+    return AffyReader(_affy_path, grch37_lookup())
 
 
 @pytest.fixture
-def cytoscan_reader(grch37_lookup):
-    return CytoScanReader(_cytoscan_path, grch37_lookup)
+def cytoscan_reader():
+    return CytoScanReader(_cytoscan_path, grch37_lookup())
 
 
 @pytest.fixture
-def open_array_reader(test_lookup_table):
-    return OpenArrayReader(_open_array_path, test_lookup_table,
+def open_array_reader():
+    return OpenArrayReader(_open_array_path, test_lookup_table(),
                            "e31a0a96465a", encoding="windows-1252")
 
 
@@ -101,83 +98,43 @@ def open_array_reader_no_ensembl():
                            "e31a0a96465a", encoding="windows-1252")
 
 
-_grch37_lookup = grch37_lookup()
-_test_lookup = test_lookup_table()
-genotype_test_data = [
-    (
-        affy_reader(_grch37_lookup),
-        [Genotype.unknown, Genotype.unknown, Genotype.het, Genotype.unknown,
-         Genotype.unknown, Genotype.unknown, Genotype.het,
-         Genotype.unknown]
-    ),
-    (
-        cytoscan_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het]
-    ),
-    (
-        lumi_317_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het, Genotype.unknown]
-    ),
-    (
-        lumi_370_reader(_grch37_lookup),
-        [Genotype.hom_alt, Genotype.hom_alt, Genotype.het, Genotype.unknown]
-    ),
-    (
-        open_array_reader(_test_lookup),
-        [Genotype.unknown, Genotype.het, Genotype.hom_alt, Genotype.hom_ref,
-         Genotype.hom_ref, Genotype.hom_ref, Genotype.hom_ref,
-         Genotype.hom_ref, Genotype.hom_alt, Genotype.hom_alt,
-         Genotype.hom_alt, Genotype.hom_ref, Genotype.hom_alt,
-         Genotype.hom_alt, Genotype.het, Genotype.het, Genotype.hom_alt,
-         Genotype.het, Genotype.hom_alt, Genotype.unknown, Genotype.het,
-         Genotype.het, Genotype.het, Genotype.hom_alt, Genotype.unknown,
-         Genotype.het, Genotype.het, Genotype.hom_ref, Genotype.het,
-         Genotype.het, Genotype.hom_alt, Genotype.unknown, Genotype.het,
-         Genotype.het, Genotype.hom_ref, Genotype.unknown, Genotype.hom_ref,
-         Genotype.hom_ref, Genotype.het, Genotype.het, Genotype.hom_alt,
-         Genotype.hom_alt, Genotype.het, Genotype.hom_alt, Genotype.het,
-         Genotype.hom_ref, Genotype.hom_alt, Genotype.hom_alt,
-         Genotype.hom_ref, Genotype.het, Genotype.hom_ref, Genotype.het,
-         Genotype.het, Genotype.unknown, Genotype.hom_ref]
-    )
-]
-
 chrom_test_data = [
     (
-        AffyReader(_affy_path, _grch37_lookup),
+        AffyReader(_affy_path, grch37_lookup()),
         ["1"]*8
     ),
     (
-        AffyReader(_affy_path, _grch37_lookup, prefix_chr="chr"),
+        AffyReader(_affy_path, grch37_lookup(), prefix_chr="chr"),
         ["chr1"]*8
     ),
     (
-        CytoScanReader(_cytoscan_path, _grch37_lookup),
+        CytoScanReader(_cytoscan_path, grch37_lookup()),
         ["1", "1", "1"]
     ),
     (
-        CytoScanReader(_cytoscan_path, _grch37_lookup, prefix_chr="chr"),
+        CytoScanReader(_cytoscan_path, grch37_lookup(), prefix_chr="chr"),
         ["chr1", "chr1", "chr1"]
     ),
     (
-        Lumi317kReader(_lumi_317_path, _grch37_lookup),
+        Lumi317kReader(_lumi_317_path, grch37_lookup()),
         ["1", "1", "1", "1"]
     ),
     (
-        Lumi317kReader(_lumi_317_path, _grch37_lookup, prefix_chr="chr"),
+        Lumi317kReader(_lumi_317_path, grch37_lookup(), prefix_chr="chr"),
         ["chr1", "chr1", "chr1", "chr1"]
     ),
     (
-        Lumi370kReader(_lumi_370_path, _grch37_lookup),
+        Lumi370kReader(_lumi_370_path, grch37_lookup()),
         ["1", "1", "1", "1"]
     ),
     (
-        Lumi370kReader(_lumi_370_path, _grch37_lookup, prefix_chr="chr"),
+        Lumi370kReader(_lumi_370_path, grch37_lookup(), prefix_chr="chr"),
         ["chr1", "chr1", "chr1", "chr1"]
     ),
     (
-        OpenArrayReader(_open_array_path, _test_lookup, prefix_chr="chr",
-                        sample="e31a0a96465a", encoding="windows-1252"),
+        OpenArrayReader(_open_array_path, test_lookup_table(),
+                        prefix_chr="chr", sample="e31a0a96465a",
+                        encoding="windows-1252"),
         ["chr3", "chr19", "chr15", "chr4", "chr13", "chr21", "chr19",
          "chr12", "chr4", "chr18", "chr14", "chrY", "chr4", "chr19",
          "chr6", "chr13", "chr18", "chr11", "chr1", "chr8", "chr15", "chr1",
@@ -191,23 +148,23 @@ chrom_test_data = [
 
 ref_test_data = [
     (
-        AffyReader(_affy_path, _grch37_lookup),
+        AffyReader(_affy_path, grch37_lookup()),
         ["T", "A", "T", "T", "T", "A", "T", "T"]
     ),
     (
-        CytoScanReader(_cytoscan_path, _grch37_lookup),
+        CytoScanReader(_cytoscan_path, grch37_lookup()),
         ["A", "T", "C"]
     ),
     (
-        Lumi317kReader(_lumi_317_path, _grch37_lookup),
+        Lumi317kReader(_lumi_317_path, grch37_lookup()),
         ["C", "A", "C", "A"]
     ),
     (
-        Lumi370kReader(_lumi_370_path, _grch37_lookup),
+        Lumi370kReader(_lumi_370_path, grch37_lookup()),
         ["C", "A", "C", "A"]
     ),
     (
-        OpenArrayReader(_open_array_path, _test_lookup,
+        OpenArrayReader(_open_array_path, test_lookup_table(),
                         sample="e31a0a96465a", encoding="windows-1252"),
         ["A", "G", "G", "T", "A", "G", "G", "C", "T", "T", "T", "C", "T",
          "G", "G", "A", "A", "G", "C", "T", "G", "C", "G", "A", "T", "T",
@@ -219,20 +176,20 @@ ref_test_data = [
 
 alt_test_data = [
     (
-        AffyReader(_affy_path, _grch37_lookup),
+        AffyReader(_affy_path, grch37_lookup()),
         [["C"], ["C"], ["C"], ["A", "G"], ["C"],
          ["C"], ["C"], ["A", "G"]]
     ),
     (
-        CytoScanReader(_cytoscan_path, _grch37_lookup),
+        CytoScanReader(_cytoscan_path, grch37_lookup()),
         [["G"], ["C"], ["G", "T"]]
     ),
     (
-        Lumi317kReader(_lumi_317_path, _grch37_lookup),
+        Lumi317kReader(_lumi_317_path, grch37_lookup()),
         [["T"], ["C", "G", "T"], ["T"], ["G"]]
     ),
     (
-        Lumi370kReader(_lumi_370_path, _grch37_lookup),
+        Lumi370kReader(_lumi_370_path, grch37_lookup()),
         [["T"], ["C", "G", "T"], ["T"], ["G"]]
     )
 ]
@@ -266,10 +223,52 @@ def test_open_array_reader_amount(open_array_reader):
     assert len(list(open_array_reader)) == 55
 
 
-@pytest.mark.parametrize("reader, genotypes", genotype_test_data)
-def test_reader_genotypes(reader, genotypes):
-    found_gt = [x.genotype for x in reader]
-    assert found_gt == genotypes
+def test_reader_genotypes(affy_reader, cytoscan_reader, lumi_317_reader,
+                          lumi_370_reader, open_array_reader):
+    genotype_test_data = [
+        (
+            affy_reader,
+            [Genotype.unknown, Genotype.unknown, Genotype.het,
+             Genotype.unknown, Genotype.unknown, Genotype.unknown,
+             Genotype.het, Genotype.unknown]
+        ),
+        (
+            cytoscan_reader,
+            [Genotype.hom_alt, Genotype.hom_alt, Genotype.het]
+        ),
+        (
+            lumi_317_reader,
+            [Genotype.hom_alt, Genotype.hom_alt, Genotype.het,
+             Genotype.unknown]
+        ),
+        (
+            lumi_370_reader,
+            [Genotype.hom_alt, Genotype.hom_alt, Genotype.het,
+             Genotype.unknown]
+        ),
+        (
+            open_array_reader,
+            [Genotype.unknown, Genotype.het, Genotype.hom_alt,
+             Genotype.hom_ref, Genotype.hom_ref, Genotype.hom_ref,
+             Genotype.hom_ref, Genotype.hom_ref, Genotype.hom_alt,
+             Genotype.hom_alt, Genotype.hom_alt, Genotype.hom_ref,
+             Genotype.hom_alt, Genotype.hom_alt, Genotype.het,
+             Genotype.het, Genotype.hom_alt, Genotype.het, Genotype.hom_alt,
+             Genotype.unknown, Genotype.het, Genotype.het, Genotype.het,
+             Genotype.hom_alt, Genotype.unknown, Genotype.het, Genotype.het,
+             Genotype.hom_ref, Genotype.het, Genotype.het, Genotype.hom_alt,
+             Genotype.unknown, Genotype.het, Genotype.het, Genotype.hom_ref,
+             Genotype.unknown, Genotype.hom_ref, Genotype.hom_ref,
+             Genotype.het, Genotype.het, Genotype.hom_alt, Genotype.hom_alt,
+             Genotype.het, Genotype.hom_alt, Genotype.het, Genotype.hom_ref,
+             Genotype.hom_alt, Genotype.hom_alt, Genotype.hom_ref,
+             Genotype.het, Genotype.hom_ref, Genotype.het,
+             Genotype.het, Genotype.unknown, Genotype.hom_ref]
+        )
+    ]
+    for reader, genotypes in genotype_test_data:
+        found_gt = [x.genotype for x in reader]
+        assert found_gt == genotypes
 
 
 @pytest.mark.parametrize("path, class_name, encoding", autodetect_reader_data)
