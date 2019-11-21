@@ -67,6 +67,7 @@ class OpenArrayReader(Reader):
         self.lookup_table = lookup_table
         self.prefix_chr = prefix_chr
         self.linecount = 18  # n_header_lines
+        self.unknown_call = {'INV', 'NOAMP', 'UND', '-/-'}
         if exclude_assays is not None:
             self.exclude_assays = exclude_assays
         else:
@@ -120,7 +121,7 @@ class OpenArrayReader(Reader):
             self.linecount += 1
             if empty_string(raw_line):
                 raise StopIteration  # end of initial list
-            line = raw_line.strip().split("\t")
+            line = raw_line.strip('\n').split("\t")
             if len(line) < 8:  # may occur if assay design is dumped in file
                 logger.debug(f"Skipping line {self.linecount}, to few columns")
                 continue
@@ -130,7 +131,8 @@ class OpenArrayReader(Reader):
                 continue
             line_sample = line[self.sample_col_idx]
             if line_sample != self.sample:
-                logger.debug(f"Skipping line {self.linecount}, wrong sample")
+                logger.debug(f"Skipping line {self.linecount}, wrong sample "
+                             f"({line_sample} is not {self.sample})")
                 continue
             rs_id = line[self.rsid_col_idx].strip()  # may have spaces :cry:
             try:
@@ -193,10 +195,20 @@ class OpenArrayReader(Reader):
 
     def get_genotype_and_alt(self, call: str, ref: str,
                              fallback_alt: str) -> Tuple[Genotype, str]:
-        if call == "N/A" or call == "NOAMP" or call == "UND":
+        # These are calls that indicate that no genotype could be determined
+        if call in self.unknown_call:
+            msg = f"Recognised {call}, which has no genotype information"
+            logger.debug(msg)
             return Genotype.unknown, "."
 
         alleles = set(call.split("/"))
+        # These are alleles that are not handled by this tool, so we print an
+        # error when we encounter them
+        for allele in alleles:
+            if not set(allele).issubset({"A", "T", "C", "G", "N"}):
+                logger.error(f"Skipping Unknown call {call}")
+                return Genotype.unknown, "."
+
         if len(alleles) > 1:
             return Genotype.het, (alleles - {ref}).pop()
 
@@ -243,7 +255,7 @@ class AffyReader(Reader):
 
     def __next__(self) -> Variant:
         for raw_line in self.handle:
-            line = raw_line.strip().split("\t")
+            line = raw_line.strip('\n').split("\t")
             chrom = self.get_chrom(line[3])
             pos = int(line[4])
             rs_id = line[2]
@@ -326,7 +338,7 @@ class CytoScanReader(Reader):
 
     def __next__(self) -> Variant:
         for raw_line in self.handle:
-            line = raw_line.strip().split("\t")
+            line = raw_line.strip('\n').split("\t")
             chrom = self.get_chrom(line[7])
             pos = int(line[8])
             rs_id = line[6]
@@ -412,7 +424,7 @@ class LumiReader(Reader):
 
     def __next__(self) -> Variant:
         for raw_line in self.handle:
-            line = raw_line.strip().split("\t")
+            line = raw_line.strip('\n').split("\t")
             rs_id = self.get_rs_id(line)
             raw_chrom = self.get_raw_chrom(line)
             chrom = self.get_chrom(raw_chrom)

@@ -47,6 +47,8 @@ _cytoscan_path = str(Path(__file__).parent / Path("data") /
                      Path("cytoscan_test.txt"))
 _open_array_path = str(Path(__file__).parent / Path("data") /
                        Path("open_array_test.txt"))
+_open_array_all_calls = str(Path(__file__).parent / Path("data") /
+                            Path("open_array_all_calls.txt"))
 
 
 @pytest.fixture
@@ -111,6 +113,12 @@ def open_array_reader_no_ensembl_lookup():
     lookup = test_lookup_table()
     return OpenArrayReader(_open_array_path, lookup,
                            "e31a0a96465a", encoding="windows-1252")
+
+
+@pytest.fixture
+def open_array_reader_all_calls():
+    lookup = test_lookup_table()
+    return OpenArrayReader(_open_array_all_calls, lookup, 'all_calls')
 
 
 chrom_test_data = [
@@ -467,3 +475,11 @@ def test_open_array_is_sorted(open_array_reader_no_ensembl):
     """
     variants = sorted(open_array_reader_no_ensembl)
     assert variants_are_ordered(variants) is True
+
+
+def test_open_array_all_calls(open_array_reader_all_calls):
+    """ All these calls should have './.' as genotype since we cannot determine
+    the actual genotype from the "call" column
+    """
+    genotypes = [var.genotype for var in open_array_reader_all_calls]
+    assert genotypes == [Genotype.unknown]*6
