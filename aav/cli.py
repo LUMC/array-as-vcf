@@ -13,8 +13,6 @@ import logging
 from .readers import autodetect_reader, OpenArrayReader
 from .lookup import RSLookup
 
-logging.basicConfig(level=logging.INFO)
-
 
 def get_parser():
     """ Argument parsing """
@@ -41,6 +39,9 @@ def get_parser():
                         help="Assay IDs for OpenArray to ignore")
     parser.add_argument("--no-ensembl-lookup", action="store_true",
                         help="Lookup missing rsIDs on Ensembl")
+    parser.add_argument("--log-level", default="INFO", required=False,
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+                        help="Set the verbosity of the logger")
     return parser
 
 
@@ -48,6 +49,11 @@ def convert():
     parser = get_parser()
     args = parser.parse_args()
     ensembl_lookup = not args.no_ensembl_lookup
+
+    # Set up logging
+    num_level = getattr(logging, args.log_level)
+    log = logging.getLogger()
+    log.setLevel(num_level)
 
     reader_cls = autodetect_reader(args.path, encoding=args.encoding)
     logging.info(f"Detected array file with type: {reader_cls.__name__}")
