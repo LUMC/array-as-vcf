@@ -19,6 +19,7 @@ from aav.readers import (AffyReader, CytoScanReader,
                          OpenArrayReader)
 from aav.lookup import RSLookup
 from aav.variation import Genotype
+from aav.variation import Variant
 
 
 def grch37_lookup():
@@ -31,7 +32,8 @@ def grch37_lookup_no_ensembl():
 
 def test_lookup_table():
     lookup_path = os.path.join("tests", "data", "lookup_table_test.json")
-    return RSLookup.from_path(lookup_path, build="GRCh37")
+    return RSLookup.from_path(lookup_path, build="GRCh37",
+                              ensembl_lookup=False)
 
 
 _lumi_317_path = os.path.join("tests", "data", "lumi_317_test.txt")
@@ -69,31 +71,38 @@ def open_array_reader():
 
 @pytest.fixture
 def lumi_317_reader_no_ensembl():
-    lookup = grch37_lookup_no_ensembl()
+    lookup = test_lookup_table()
     return Lumi317kReader(_lumi_317_path, lookup)
 
 
 @pytest.fixture
 def lumi_370_reader_no_ensembl():
-    lookup = grch37_lookup_no_ensembl()
+    lookup = test_lookup_table()
     return Lumi370kReader(_lumi_370_path, lookup)
 
 
 @pytest.fixture
 def affy_reader_no_ensembl():
-    lookup = grch37_lookup_no_ensembl()
+    lookup = test_lookup_table()
     return AffyReader(_affy_path, lookup)
 
 
 @pytest.fixture
 def cytoscan_reader_no_ensembl():
-    lookup = grch37_lookup_no_ensembl()
+    lookup = test_lookup_table()
     return CytoScanReader(_cytoscan_path, lookup)
 
 
 @pytest.fixture
 def open_array_reader_no_ensembl():
-    lookup = grch37_lookup_no_ensembl()
+    lookup = test_lookup_table()
+    return OpenArrayReader(_open_array_path, lookup,
+                           "e31a0a96465a", encoding="windows-1252")
+
+
+@pytest.fixture
+def open_array_reader_no_ensembl_lookup():
+    lookup = test_lookup_table()
     return OpenArrayReader(_open_array_path, lookup,
                            "e31a0a96465a", encoding="windows-1252")
 
@@ -416,3 +425,36 @@ def test_affy_unknown_rsid(affy_reader_no_ensembl):
     """
     for variant in affy_reader_no_ensembl:
         assert variant.ref != '.'
+
+
+def variants_are_ordered(iterator):
+    """ Return whether the Variants in iterator are sorted by CHROM and
+    POS, so that they can be written to a valid vcf file
+    """
+    chroms = set()
+    # Create an empty variant
+    prev_variant = Variant('None', -1, 'A', ['C'], -1.0, ['filters'])
+    for variant in iterator:
+        if variant.chrom != prev_variant.chrom:
+            # If we see this chromosome for the second time, the ordering is
+            # wrong
+            if variant.chrom in chroms:
+                return False
+            # Otherwise, add the chromosome to the set
+            else:
+                chroms.add(variant.chrom)
+        # If the CHROM is the same, POS can not be smaller than the previous
+        # position
+        elif variant.pos < prev_variant.pos:
+            return False
+        prev_variant = variant
+    else:
+        return True
+
+
+def test_open_array_is_sorted(open_array_reader_no_ensembl):
+    """ The OpenArray file is not sorted, unlike the other array files. So we
+    can use the OpenArray file to make sure we sort the variants
+    """
+    variants = list(open_array_reader_no_ensembl)
+    assert variants_are_ordered(variants) is True
