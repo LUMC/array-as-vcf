@@ -411,53 +411,56 @@ class LumiReader(Reader):
         ]
 
     def __next__(self) -> Variant:
-        line_items = next(self.handle).strip().split("\t")
-        rs_id = self.get_rs_id(line_items)
-        raw_chrom = self.get_raw_chrom(line_items)
-        chrom = self.get_chrom(raw_chrom)
-        pos = int(line_items[2])
-        g_type = line_items[3]
+        for raw_line in self.handle:
+            line = raw_line.strip().split("\t")
+            rs_id = self.get_rs_id(line)
+            raw_chrom = self.get_raw_chrom(line)
+            chrom = self.get_chrom(raw_chrom)
+            pos = int(line[2])
+            g_type = line[3]
 
-        try:
-            q_res = self.lookup_table[rs_id]
-        except KeyError:
-            logger.info(f"Skipping {rs_id}, transcript not found")
-            return self.__next__()
-        else:
-            if q_res is None or q_res.ref_is_minor is None:
-                logger.info(f"Skipping {rs_id}, incomplete data: {q_res}")
-                return self.__next__()
+            try:
+                q_res = self.lookup_table[rs_id]
+            except KeyError:
+                logger.info(f"Skipping {rs_id}, transcript not found")
+                continue
             else:
-                ref = q_res.ref
-                alt = q_res.alt
-                ref_is_minor = q_res.ref_is_minor
-                gt = self.get_genotype(g_type, ref_is_minor)
+                if q_res is None or q_res.ref_is_minor is None:
+                    logger.info(f"Skipping {rs_id}, incomplete data: {q_res}")
+                    continue
+                else:
+                    ref = q_res.ref
+                    alt = q_res.alt
+                    ref_is_minor = q_res.ref_is_minor
+                    gt = self.get_genotype(g_type, ref_is_minor)
 
-        infos = [
-            InfoField(
-                "Log_R_Ratio", comma_float(line_items[4]), InfoFieldNumber.one
-            ),
-            InfoField(
-                "CNV_Value", int(line_items[5]), InfoFieldNumber.one
-            ),
-            InfoField(
-                "Allele_Freq", comma_float(line_items[6]), InfoFieldNumber.one
-            )
-        ]
+            infos = [
+                InfoField(
+                    "Log_R_Ratio", comma_float(line[4]), InfoFieldNumber.one
+                ),
+                InfoField(
+                    "CNV_Value", int(line[5]), InfoFieldNumber.one
+                ),
+                InfoField(
+                    "Allele_Freq", comma_float(line[6]), InfoFieldNumber.one
+                )
+            ]
 
-        return Variant(chrom=chrom, pos=pos, ref=ref, alt=alt,
-                       qual=self.qual, id=rs_id, info_fields=infos,
-                       genotype=gt)
+            return Variant(chrom=chrom, pos=pos, ref=ref, alt=alt,
+                           qual=self.qual, id=rs_id, info_fields=infos,
+                           genotype=gt)
+        else:
+            raise StopIteration
 
     def get_chrom(self, chrom: str) -> str:
         if self.chr_prefix is None:
             return chrom
         return "{0}{1}".format(self.chr_prefix, chrom)
 
-    def get_rs_id(self, line_items: List[str]) -> str:
+    def get_rs_id(self, line: List[str]) -> str:
         raise NotImplementedError
 
-    def get_raw_chrom(self, line_items: List[str]) -> str:
+    def get_raw_chrom(self, line: List[str]) -> str:
         raise NotImplementedError
 
     def get_genotype(self, g_type: str, ref_is_minor: bool) -> Genotype:
@@ -479,20 +482,20 @@ class LumiReader(Reader):
 
 class Lumi370kReader(LumiReader):
 
-    def get_rs_id(self, line_items: List[str]) -> str:
-        return line_items[1]
+    def get_rs_id(self, line: List[str]) -> str:
+        return line[1]
 
-    def get_raw_chrom(self, line_items: List[str]) -> str:
-        return line_items[0]
+    def get_raw_chrom(self, line: List[str]) -> str:
+        return line[0]
 
 
 class Lumi317kReader(LumiReader):
 
-    def get_rs_id(self, line_items: List[str]) -> str:
-        return line_items[0]
+    def get_rs_id(self, line: List[str]) -> str:
+        return line[0]
 
-    def get_raw_chrom(self, line_items: List[str]) -> str:
-        return line_items[1]
+    def get_raw_chrom(self, line: List[str]) -> str:
+        return line[1]
 
 
 def autodetect_reader(path: str,

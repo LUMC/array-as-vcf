@@ -7,7 +7,6 @@ test_readers.py
 
 :license: MIT
 """
-import os
 from datetime import date
 from pathlib import Path
 
@@ -32,16 +31,22 @@ def grch37_lookup_no_ensembl():
 
 
 def test_lookup_table():
-    lookup_path = Path(__file__).parent / Path("data") / Path("lookup_table_test.json")
+    lookup_path = str(Path(__file__).parent / Path("data") /
+                      Path("lookup_table_test.json"))
     return RSLookup.from_path(lookup_path, build="GRCh37",
                               ensembl_lookup=False)
 
 
-_lumi_317_path = str(Path(__file__).parent / Path("data") / Path("lumi_317_test.txt"))
-_lumi_370_path = str(Path(__file__).parent / Path("data") / Path("lumi_370_test.txt"))
-_affy_path = str(Path(__file__).parent / Path("data") / Path("affy_test.txt"))
-_cytoscan_path = str(Path(__file__).parent / Path("data") / Path("cytoscan_test.txt"))
-_open_array_path = str(Path(__file__).parent / Path("data") / Path("open_array_test.txt"))
+_lumi_317_path = str(Path(__file__).parent / Path("data") /
+                     Path("lumi_317_test.txt"))
+_lumi_370_path = str(Path(__file__).parent / Path("data") /
+                     Path("lumi_370_test.txt"))
+_affy_path = str(Path(__file__).parent / Path("data") /
+                 Path("affy_test.txt"))
+_cytoscan_path = str(Path(__file__).parent / Path("data") /
+                     Path("cytoscan_test.txt"))
+_open_array_path = str(Path(__file__).parent / Path("data") /
+                       Path("open_array_test.txt"))
 
 
 @pytest.fixture
@@ -455,7 +460,10 @@ def variants_are_ordered(iterator):
 
 def test_open_array_is_sorted(open_array_reader_no_ensembl):
     """ The OpenArray file is not sorted, unlike the other array files. So we
-    can use the OpenArray file to make sure we sort the variants
+    can use the OpenArray file to make sure we sort the variants properly
+
+    Note that this is only required if you want to write the Variants from an
+    array into a valid VCF file
     """
-    variants = list(open_array_reader_no_ensembl)
+    variants = sorted(open_array_reader_no_ensembl)
     assert variants_are_ordered(variants) is True

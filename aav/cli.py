@@ -74,7 +74,9 @@ def convert():
 
     print(reader.vcf_header(args.sample_name), end='')
 
-    for i, record in enumerate(reader, 1):
+    # To print a valid vcf file, the Variants have to be sorted
+    variants = sorted(reader)
+    for i, record in enumerate(variants, 1):
         print(record.vcf_line)
 
     try:
