@@ -26,7 +26,7 @@ setup(
     author_email="a.h.b.bollen@lumc.nl",
     license="MIT",
     packages=["aav"],
-    install_requires=[],
+    install_requires=["requests"],
     entry_points={
         "console_scripts": [
             "aav = aav.cli:convert"
