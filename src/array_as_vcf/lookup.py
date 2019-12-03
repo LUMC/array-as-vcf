@@ -7,8 +7,6 @@ aav.lookup
 :license: MIT
 """
 import requests
-from werkzeug.exceptions import NotFound
-from pathlib import Path
 from typing import List, NamedTuple, Dict, Optional
 
 import json
@@ -92,7 +90,7 @@ def query_ensembl(rs_id: str, build: str,
             pass
         else:
             if "not found for human" in error:
-                raise NotFound("rsID not found for human")
+                raise RuntimeError("rsID not found for human")
         raise requests.HTTPError("Request failed with code {0}".format(
             response.status_code
         ))
@@ -101,7 +99,7 @@ def query_ensembl(rs_id: str, build: str,
     try:
         allele_string = j.get("mappings", [{}])[0].get("allele_string", "")
     except IndexError:  # mapping may be `mapping: []` when it does not map to genome # noqa
-        raise NotFound("rsID does not map to genome")
+        raise RuntimeError("rsID does not map to genome")
 
     minor_allele = j.get("minor_allele")
 
@@ -131,7 +129,8 @@ class RSLookup(object):
     def __init__(self, build: str,
                  init_d: dict = None,
                  request_timeout: float = 120,
-                 request_tries: int = 1):
+                 request_tries: int = 1,
+                 ensembl_lookup: bool = True):
         """
         Create lookup table.
         :param build: genome build. Either GRCH37 or GRCH38
@@ -142,13 +141,14 @@ class RSLookup(object):
         self.build = build
         self.request_tries = request_tries
         self.request_timeout = request_timeout
+        self.ensembl_lookup = ensembl_lookup
         if init_d:
             self.__rsids = init_d
         else:
             self.__rsids = {}
 
     def __getitem__(self, rs_id: str) -> Optional[QueryResult]:
-        if rs_id not in self.__rsids:
+        if rs_id not in self.__rsids and self.ensembl_lookup:
             self.__rsids[rs_id] = self._get_ensembl(rs_id)
 
         return self.__rsids[rs_id]
@@ -157,9 +157,9 @@ class RSLookup(object):
         for _ in range(self.request_tries):
             try:
                 return query_ensembl(rs_id, self.build, self.request_timeout)
-            except (requests.Timeout, requests.HTTPError):
+            except (requests.Timeout, requests.HTTPError, RuntimeError):
                 continue
-        raise ValueError("Too many tries for request")
+        raise KeyError(f"Failed to retrieve {rs_id} from ensembl")
 
     def dumps(self) -> str:
         """Dump table to json-formatted string"""
@@ -169,9 +169,9 @@ class RSLookup(object):
         return len(self.__rsids)
 
     @classmethod
-    def from_path(cls, path: Path, build: str, request_timeout: float = 120,
-                  request_tries: int = 1):
-        with path.open() as handle:
+    def from_path(cls, path: str, build: str, request_timeout: float = 120,
+                  request_tries: int = 1, ensembl_lookup: bool = True):
+        with open(path, 'r') as handle:
             js = handle.read()
         init_d = deserialize_query_results(js)
         return cls(build, init_d, request_timeout=request_timeout,

@@ -1,0 +1,24 @@
+# Exported By : GUEST																											
+# Export Date : 01/15/2019 13:59:26 CET																											
+# Study Name : Validatie ronde 3																											
+# Experiment Type : Real-time																											
+# Instrument Type : QuantStudio™ 12K Flex Real-Time PCR System																											
+# Software Version Number : 1.4.0																											
+# Creation Date : 09/14/2018 13:20:18 CEST																											
+# Created By : GUEST																											
+# Last Modified Date : 01/15/2019 13:57:35 CET																											
+# Last Modified By : GUEST																											
+# Template File Name : Validatieronde 1 en 2 alsTemplate volledig.lat																											
+# Template Originating Study Name : Validatieronde 1 met Miracle IDs																											
+# Template Creation Date : 08/10/2018 13:17:47 CEST																											
+# Template Created By User ID : GUEST																											
+# Template Software Version Number :  1.4.0																											
+																											
+																											
+Assay Name	Assay ID	Gene Symbol	NCBI SNP Reference	Sample ID	Call	Manual	Quality	VIC(Rn)	FAM(Rn)	ROX	Task	Gender	Population	Well	Omit	Experiment Name	Plate Barcode	Annotation	Low ROX™ Intensity	NTC FAM™ Intensity High	NTC VIC® Intensity High	Genotype Quality Low	Failed Control	Reference Sample Discordance	Replicate Sample Discordance	Chromosome #	Position
+13858219.oarray.txt:AMELY	AN7DTWR		rs4577050	all_calls	A/MU	FALSE	0.98	448.519	348.816	310.176	Unknown	Unknown		B9d2	FALSE	AGZ60_2018_09_13_Validatieronde3.eds	AGZ60		FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	Y	6737950
+13858420.oarray.txt:DDX3Y	AN9HMGN		rs4577050	all_calls	A/MU	FALSE	0.97	173.152	109.645	421.765	Unknown	Unknown		C10d3	FALSE	AGZ60_2018_09_13_Validatieronde3.eds	AGZ60		FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	Y	15024848
+13806428.oarray.txt:hCV990000001	C_990000001_10	AMELX;ARHGAP6	rs4577050	all_calls	-/AAGTGG	FALSE	0.99	3317.974	2513.634	473.5	Unknown	Unknown		C2f6	FALSE	AGZ60_2018_09_13_Validatieronde3.eds	AGZ60		FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	X	123
+13968835.oarray.txt:hCV2167549	C___2167549_1_	COG1;FAM104A	rs1037256	all_calls	INV	FALSE	0	55.118	-28.991	-11	Unknown	Unknown		A11c3	FALSE	AGZ60_2018_09_13_Validatieronde3.eds	AGZ60		TRUE	FALSE	FALSE	TRUE	FALSE	FALSE	FALSE	17	71197748
+13806428.oarray.txt:hCV25472610	C__25472610_10	SLC12A6;EMC4	rs4577050	all_calls	NOAMP	FALSE	0.99	430.273	322.637	422.294	Unknown	Unknown		C2c1	FALSE	AGZ60_2018_09_13_Validatieronde3.eds	AGZ60		FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	15	34528948
+13806527.oarray.txt:AMELY	AN7DTWR		rs4577050	all_calls	UND	FALSE	0.87	182.374	12.519	469.529	Unknown	Unknown		A3d2	FALSE	AGZ60_2018_09_13_Validatieronde3.eds	AGZ60		FALSE	FALSE	FALSE	TRUE	FALSE	FALSE	FALSE	Y	6737950

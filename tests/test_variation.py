@@ -8,11 +8,12 @@ test_variation.py
 """
 from datetime import date
 import pytest
-from aav import __version__
-from aav.variation import (Variant, InfoField, InfoFieldNumber, Genotype,
-                           MetaLine, InfoFieldType, InfoHeaderLine,
-                           FormatHeaderLine, date_header, program_header,
-                           chrom_header)
+from array_as_vcf import __version__
+from array_as_vcf.variation import (
+    Variant, InfoField, InfoFieldNumber, Genotype,
+    MetaLine, InfoFieldType, InfoHeaderLine,
+    FormatHeaderLine, date_header, program_header,
+    chrom_header)
 
 
 info_test_data = [
