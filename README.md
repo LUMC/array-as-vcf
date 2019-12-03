@@ -1,6 +1,6 @@
 # Array As VCF
 
-`aav` stands for `array as vcf` and consists of a small library and tool to 
+`array-as-vcf` is a small library and tool to 
 convert common SNP array formats to VCF format.
 
 There are four currently supported array formats:
@@ -19,18 +19,9 @@ Binary formats are not (yet) supported.
 * Python 3.6
 * requests
 
-# Development requirements
-
-* flake8
-* pytest
-* pytest-cov
-* pytest-xdist
-* tox
-
-
 # CLI usage
 
-The `aav` tool will convert array files to VCF format.
+The `array-as-vcf` tool will convert array files to VCF format.
 It will auto-detect the type of array file, and throw an error if it can't
 determine it. 
 
@@ -60,11 +51,11 @@ E.g.
 }
 ```
 
-If you have never run `aav` before , you can run `aav` sans lookup table
+If you have never run `array-as-vcf` before , you can run `array-as-vcf` sans lookup table
 and `dump` the generated internal lookup table to a file for next iterations.
 
 ```bash
-Usage: aav [OPTIONS]
+Usage: array-as-vcf [OPTIONS]
 
 Options:
   -p, --path PATH              Path to array file  [required]
@@ -77,8 +68,3 @@ Options:
   --help                       Show this message and exit.
 
 ```
-
-# License
- 
-MIT
-
