@@ -17,15 +17,16 @@ with open(readme_file) as desc_handle:
 setup(
     name="array-as-vcf",
     version="1.0.0-dev",
-    description="Array to VCF",
+    description="Convert SNP array to VCF",
     long_description=long_desc,
     author="Sander Bollen, Redmar van den Berg",
     author_email="KG_bioinf@lumc.nl",
     license="MIT",
+    keywords="array vcf SNP convert OpenArray Cytoscan lumi370k lumi317k Affymetrix",
     zip_safe=False,
     url="https://github.com/LUMC/array-as-vcf",
-    package_dir={'': 'src'},
-    packages=find_packages(),
+    package_dir={"": "src"},
+    packages=find_packages("src"),
     install_requires=["requests", "setuptools"],
     entry_points={
         "console_scripts": [
