@@ -28,9 +28,11 @@ setup(
     package_dir={"": "src"},
     packages=find_packages("src"),
     install_requires=["requests", "setuptools"],
+    python_requires=">=3.6",
     entry_points={
         "console_scripts": [
             "array-as-vcf = array_as_vcf.cli:convert",
+            "aav = array_as_vcf.cli:convert",
         ]
     },
     classifiers=[
