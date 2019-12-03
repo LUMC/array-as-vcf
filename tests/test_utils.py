@@ -8,7 +8,7 @@ test_utils.py
 :license: MIT
 """
 import pytest
-from aav.utils import comma_float
+from array_as_vcf.utils import comma_float
 
 
 comma_float_params = [

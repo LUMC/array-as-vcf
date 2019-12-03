@@ -103,6 +103,9 @@ class Variant(object):
 
         return fmt
 
+    def __lt__(self, other) -> bool:
+        return (self.chrom, self.pos) < (other.chrom, other.pos)
+
 
 class HeaderLine(object):
 

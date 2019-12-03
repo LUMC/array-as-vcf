@@ -7,15 +7,14 @@ test_lookup.py
 :license: MIT
 """
 
-from aav.lookup import query_ensembl, RSLookup, QueryResult
+import os
+import json
 from datetime import datetime
 
-from pathlib import Path
-import json
-
 import pytest
-from werkzeug.exceptions import NotFound
 from requests.exceptions import Timeout
+
+from array_as_vcf.lookup import query_ensembl, RSLookup, QueryResult
 
 
 @pytest.fixture
@@ -30,47 +29,53 @@ def grch38_lookup():
 
 @pytest.fixture
 def lookup_table():
-    return (Path(__file__).parent / Path("data")
-            / Path("lookup_table_test.json"))
+    return os.path.join("tests", "data", "lookup_table_test.json")
 
 
+@pytest.mark.xfail
 def test_query_ensembl_known_rsid_grch38():
     assert query_ensembl("rs56116432", "GRCh38") == QueryResult(
         "C", ["T"], False
     )
 
 
+@pytest.mark.xfail
 def test_query_ensembl_known_rsid_grch37():
     assert query_ensembl("rs56116432", "GRCh37") == QueryResult(
         "C", ["T"], False
     )
 
 
+@pytest.mark.xfail
 def test_query_ensembl_unknown_minor_grch37():
     assert query_ensembl("rs3913290", "GRCh37") == QueryResult(
         "C", ["T"], None
     )
 
 
+@pytest.mark.xfail
 def test_query_multi_alt_grch38():
     assert query_ensembl("rs60", "GRCh38") == QueryResult(
         "A", ["G", "T"], True
     )
 
 
+@pytest.mark.xfail
 def test_query_multi_alt_grch37():
     assert query_ensembl("rs60", "GRCh37") == QueryResult(
         "A", ["G", "T"], True
     )
 
 
+@pytest.mark.xfail
 def test_query_ensembl_unknown_build():
     with pytest.raises(NotImplementedError):
         query_ensembl("rs56116432", "unknown")
 
 
+@pytest.mark.xfail
 def test_unknown_rsid():
-    with pytest.raises(NotFound) as exc:
+    with pytest.raises(RuntimeError) as exc:
         query_ensembl("rs5611644432", "GRCh37")
         assert "rsID not found for human" in str(exc)
 
@@ -80,28 +85,33 @@ def test_timeout():
         query_ensembl("rs60", "GRCh37", 0.00001)
 
 
+@pytest.mark.xfail
 def test_lookup_succeed_grch37(grch37_lookup):
     assert grch37_lookup['rs56116432'] == QueryResult(
         "C", ["T"], False
     )
 
 
+@pytest.mark.xfail
 def test_lookup_fail_grch37(grch37_lookup):
-    with pytest.raises(NotFound):
+    with pytest.raises(KeyError, match='rs5611644432'):
         grch37_lookup['rs5611644432']
 
 
+@pytest.mark.xfail
 def test_lookup_succeed_grhc38(grch38_lookup):
     assert grch38_lookup['rs56116432'] == QueryResult(
         "C", ["T"], False
     )
 
 
+@pytest.mark.xfail
 def test_lookup_fail_grch38(grch38_lookup):
-    with pytest.raises(NotFound):
+    with pytest.raises(KeyError, match='rs5611644432'):
         grch38_lookup['rs5611644432']
 
 
+@pytest.mark.xfail
 def test_lookup_speed_grch37(grch37_lookup):
     now = datetime.utcnow()
     _ = grch37_lookup['rs56']
@@ -115,6 +125,7 @@ def test_lookup_speed_grch37(grch37_lookup):
     assert second_delta < init_delta
 
 
+@pytest.mark.xfail
 def test_lookup_speed_grch38(grch38_lookup):
     now = datetime.utcnow()
     _ = grch38_lookup['rs56']
@@ -130,13 +141,14 @@ def test_lookup_speed_grch38(grch38_lookup):
 
 def test_lookup_timeout():
     look = RSLookup(build="GRCh37", request_timeout=0.0001)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError, match='rs56'):
         look['rs56']
 
 
+@pytest.mark.xfail
 def test_lookup_timeout_tries():
     look = RSLookup(build="GRCh37", request_timeout=0.0001, request_tries=5)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError, match='r56'):
         look['r56']
 
 
@@ -196,14 +208,33 @@ def test_lookup_table_load(lookup_table):
         "rs3913290": QueryResult("C", ["T"], None),
         "rs1147504": QueryResult("G", ["A"], True),
         "rs10883099": QueryResult("G", ["A"], True),
-        "rs2395029": QueryResult("T", ["G"], False)
+        "rs2395029": QueryResult("T", ["G"], False),
+        "rs2980300": QueryResult("T", ["C"], True),
+        "rs10907175": QueryResult("A", ["C"], False),
+        "rs2887286": QueryResult("T", ["C"], True),
+        "rs307378": QueryResult("T", ["A", "G"], True),
+        "rs6696609": QueryResult("C", ["G", "T"], False),
+        "rs3737728": QueryResult("A", ["C", "G", "T"], True),
+        "rs12939215": QueryResult("A", ["C"], None)
     }
 
 
 def test_lookup_table_dump(lookup_table):
-    with lookup_table.open("r") as handle:
+    with open(lookup_table, "r") as handle:
         original = json.load(handle)
 
     rs_lookup = RSLookup.from_path(lookup_table, "GRCh37")
     generated = json.loads(rs_lookup.dumps())
     assert generated == original
+
+
+@pytest.mark.xfail
+def test_lookup_online():
+    look = RSLookup(build="GRCh37", ensembl_lookup=True)
+    look['rs3934834']
+
+
+def test_lookup_offline():
+    look = RSLookup(build="GRCh37", ensembl_lookup=False)
+    with pytest.raises(KeyError):
+        look['rs3934834']
