@@ -12,14 +12,14 @@ from pathlib import Path
 
 import pytest
 
-from aav import __version__
-from aav.readers import (AffyReader, CytoScanReader,
-                         Lumi317kReader, Lumi370kReader,
-                         autodetect_reader, Reader,
-                         OpenArrayReader)
-from aav.lookup import RSLookup
-from aav.variation import Genotype
-from aav.variation import Variant
+from array_as_vcf import __version__
+from array_as_vcf.readers import (AffyReader, CytoScanReader,
+                                  Lumi317kReader, Lumi370kReader,
+                                  autodetect_reader, Reader,
+                                  OpenArrayReader)
+from array_as_vcf.lookup import RSLookup
+from array_as_vcf.variation import Genotype
+from array_as_vcf.variation import Variant
 
 
 def grch37_lookup():
