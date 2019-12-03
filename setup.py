@@ -19,6 +19,7 @@ setup(
     version="1.0.0",
     description="Convert SNP array to VCF",
     long_description=long_desc,
+    long_description_content_type="text/markdown",
     author="Sander Bollen, Redmar van den Berg",
     author_email="KG_bioinf@lumc.nl",
     license="MIT",
