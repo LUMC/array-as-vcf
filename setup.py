@@ -16,7 +16,7 @@ with open(readme_file) as desc_handle:
 
 setup(
     name="array-as-vcf",
-    version="1.0.1-dev",
+    version="1.0.2-dev",
     description="Convert SNP array to VCF",
     long_description=long_desc,
     long_description_content_type="text/markdown",
