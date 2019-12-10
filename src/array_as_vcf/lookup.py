@@ -175,4 +175,4 @@ class RSLookup(object):
             js = handle.read()
         init_d = deserialize_query_results(js)
         return cls(build, init_d, request_timeout=request_timeout,
-                   request_tries=request_tries)
+                   request_tries=request_tries, ensembl_lookup=ensembl_lookup)
