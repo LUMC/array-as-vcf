@@ -28,7 +28,6 @@ setup(
     url="https://github.com/LUMC/array-as-vcf",
     package_dir={"": "src"},
     packages=find_packages("src"),
-    install_requires=["requests"],
     python_requires=">=3.6",
     entry_points={
         "console_scripts": [

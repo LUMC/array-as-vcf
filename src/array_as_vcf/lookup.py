@@ -6,7 +6,8 @@ aav.lookup
 :copyright: (c) 2018 Leiden University Medical Center
 :license: MIT
 """
-import requests
+import urllib.request
+from urllib.error import HTTPError, URLError
 from typing import List, NamedTuple, Dict, Optional
 
 import json
@@ -81,21 +82,16 @@ def query_ensembl(rs_id: str, build: str,
         "content-type=application/json"
     )
 
-    response = requests.get(url, timeout=timeout)
-
-    if not 200 <= response.status_code < 300:
-        try:
-            error = response.json().get('error')
-        except ValueError:
-            pass
-        else:
+    with urllib.request.urlopen(url, timeout=timeout) as f:
+        response = f.read().decode("utf-8")
+        if not 200 <= f.status < 300:
+            error = json.loads(response).get('error')
             if "not found for human" in error:
                 raise RuntimeError("rsID not found for human")
-        raise requests.HTTPError("Request failed with code {0}".format(
-            response.status_code
-        ))
-
-    j = response.json()
+            raise HTTPError(
+                f.url, f.status, f"Request failed with code {f.status}",
+                f.headers, f.fp)
+    j = json.loads(response)
     try:
         allele_string = j.get("mappings", [{}])[0].get("allele_string", "")
     except IndexError:  # mapping may be `mapping: []` when it does not map to genome # noqa
@@ -157,7 +153,7 @@ class RSLookup(object):
         for _ in range(self.request_tries):
             try:
                 return query_ensembl(rs_id, self.build, self.request_timeout)
-            except (requests.Timeout, requests.HTTPError, RuntimeError):
+            except (HTTPError, URLError, RuntimeError):
                 continue
         raise KeyError(f"Failed to retrieve {rs_id} from ensembl")
 
