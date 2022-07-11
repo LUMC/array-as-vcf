@@ -56,14 +56,14 @@ def test_query_ensembl_unknown_minor_grch37():
 @pytest.mark.xfail
 def test_query_multi_alt_grch38():
     assert query_ensembl("rs60", "GRCh38") == QueryResult(
-        "A", ["G", "T"], True
+        "A", ["C", "G", "T"], True
     )
 
 
 @pytest.mark.xfail
 def test_query_multi_alt_grch37():
     assert query_ensembl("rs60", "GRCh37") == QueryResult(
-        "A", ["G", "T"], True
+        "A", ["C", "G", "T"], True
     )
 
 
