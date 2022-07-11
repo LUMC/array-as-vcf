@@ -200,12 +200,12 @@ ref_test_data = [
 alt_test_data = [
     (
         AffyReader(_affy_path, grch37_lookup()),
-        [["C"], ["C"], ["C"], ["A", "G"], ["C"],
-         ["C"], ["C"], ["A", "G"]]
+        [["A", "C", "G"], ["C"], ["C"], ["A", "C", "G"], ["A", "C", "G"],
+         ["C"], ["C"], ["A", "C", "G"]]
     ),
     (
         CytoScanReader(_cytoscan_path, grch37_lookup()),
-        [["G"], ["C"], ["G", "T"]]
+        [["C", "G", "T"], ["A", "C"], ["G", "T"]]
     ),
     (
         Lumi317kReader(_lumi_317_path, grch37_lookup()),
