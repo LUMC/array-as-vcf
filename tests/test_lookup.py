@@ -6,15 +6,14 @@ test_lookup.py
 :copyright: (c) 2018 Leiden University Medical Center
 :license: MIT
 """
-
-import os
 import json
+import os
 from datetime import datetime
-
-import pytest
 from urllib.error import URLError
 
-from array_as_vcf.lookup import query_ensembl, RSLookup, QueryResult
+from array_as_vcf.lookup import QueryResult, RSLookup, query_ensembl
+
+import pytest
 
 
 @pytest.fixture
