@@ -12,7 +12,7 @@ import json
 from datetime import datetime
 
 import pytest
-from requests.exceptions import Timeout
+from urllib.error import URLError
 
 from array_as_vcf.lookup import query_ensembl, RSLookup, QueryResult
 
@@ -81,8 +81,9 @@ def test_unknown_rsid():
 
 
 def test_timeout():
-    with pytest.raises(Timeout):
+    with pytest.raises(URLError) as error:
         query_ensembl("rs60", "GRCh37", 0.00001)
+    error.match("timed out")
 
 
 @pytest.mark.xfail
