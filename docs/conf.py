@@ -27,8 +27,8 @@ package = pkg_resources.get_distribution("array_as_vcf")
 metadata_file = Path(package.egg_info) / Path(package.PKG_INFO)
 metadata = DistributionMetadata(path=str(metadata_file))
 
-project = 'python-isal'
-copyright = '2020, Leiden University Medical Center'
+project = 'array-as-vcf'
+copyright = '2018, Leiden University Medical Center'
 author = 'Leiden University Medical Center'
 
 # The short X.Y version
