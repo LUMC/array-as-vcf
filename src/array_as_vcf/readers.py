@@ -6,22 +6,19 @@ aav.readers
 :copyright: (c) 2018 Leiden University Medical Center
 :license: MIT
 """
+import logging
 from functools import reduce
 from math import log10
-from typing import Optional, List, Type, Tuple, Set
-import logging
+from typing import List, Optional, Set, Tuple, Type
 
-from .variation import (Variant, InfoFieldNumber, InfoField, Genotype,
-                        InfoHeaderLine, GT_FORMAT, VCF_v_4_2,
-                        program_header, date_header, chrom_header,
-                        InfoFieldType)
 from .lookup import RSLookup
 from .utils import comma_float, empty_string
-
+from .variation import (GT_FORMAT, Genotype, InfoField, InfoFieldNumber,
+                        InfoFieldType, InfoHeaderLine, VCF_v_4_2, Variant,
+                        chrom_header, date_header, program_header)
 
 GRCH37_LOOKUP = RSLookup("GRCh37")
 GRCH38_LOOKUP = RSLookup("GRCh38")
-
 
 logger = logging.getLogger('ArrayReader')
 

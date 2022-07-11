@@ -10,8 +10,8 @@ aav.cli
 import argparse
 import logging
 
-from .readers import autodetect_reader, OpenArrayReader
 from .lookup import RSLookup
+from .readers import OpenArrayReader, autodetect_reader
 
 
 def get_parser():

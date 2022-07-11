@@ -6,11 +6,10 @@ aav.lookup
 :copyright: (c) 2018 Leiden University Medical Center
 :license: MIT
 """
-import urllib.request
-from urllib.error import HTTPError, URLError
-from typing import List, NamedTuple, Dict, Optional
-
 import json
+import urllib.request
+from typing import Dict, List, NamedTuple, Optional
+from urllib.error import HTTPError, URLError
 
 
 class QueryResult(NamedTuple):

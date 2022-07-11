@@ -7,8 +7,8 @@ aav.variation
 :license: MIT
 """
 import enum
-from typing import List, Optional, Any
 from datetime import date
+from typing import Any, List, Optional
 
 from . import __version__
 

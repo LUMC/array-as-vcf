@@ -10,16 +10,16 @@ test_readers.py
 from datetime import date
 from pathlib import Path
 
-import pytest
-
 from array_as_vcf import __version__
+from array_as_vcf.lookup import RSLookup
 from array_as_vcf.readers import (AffyReader, CytoScanReader,
                                   Lumi317kReader, Lumi370kReader,
-                                  autodetect_reader, Reader,
-                                  OpenArrayReader)
-from array_as_vcf.lookup import RSLookup
+                                  OpenArrayReader, Reader,
+                                  autodetect_reader)
 from array_as_vcf.variation import Genotype
 from array_as_vcf.variation import Variant
+
+import pytest
 
 
 def grch37_lookup():
