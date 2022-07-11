@@ -6,9 +6,9 @@ aav.readers
 :copyright: (c) 2018 Leiden University Medical Center
 :license: MIT
 """
+import functools
 import logging
-from functools import reduce
-from math import log10
+import math
 from typing import List, Optional, Set, Tuple, Type
 
 from .lookup import RSLookup
@@ -49,7 +49,8 @@ class Reader(object):
         return self
 
     def vcf_header(self, sample_name: str) -> str:
-        s = reduce(lambda x, y: x + str(y) + "\n", self.header_fields, "")
+        s = functools.reduce(
+            lambda x, y: x + str(y) + "\n", self.header_fields, "")
         return s + chrom_header(sample_name) + '\n'
 
 
@@ -389,7 +390,7 @@ class CytoScanReader(Reader):
     def get_qual(self, confidence: float) -> float:
         if confidence == 0:
             return 0
-        return -10 * log10(confidence)
+        return -10 * math.log10(confidence)
 
 
 class LumiReader(Reader):
