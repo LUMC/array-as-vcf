@@ -81,16 +81,15 @@ def query_ensembl(rs_id: str, build: str,
         rs_id,
         "content-type=application/json"
     )
-
-    with urllib.request.urlopen(url, timeout=timeout) as f:
-        response = f.read().decode("utf-8")
-        if not 200 <= f.status < 300:
-            error = json.loads(response).get('error')
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as f:
+            response = f.read().decode("utf-8")
+    except HTTPError as e:
+        if not 200 <= e.status < 300:
+            error = json.loads(e.read()).get('error')
             if "not found for human" in error:
                 raise RuntimeError("rsID not found for human")
-            raise HTTPError(
-                f.url, f.status, f"Request failed with code {f.status}",
-                f.headers, f.fp)
+            raise e
     j = json.loads(response)
     try:
         allele_string = j.get("mappings", [{}])[0].get("allele_string", "")
