@@ -71,6 +71,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
+# Suppress: docstring of array_as_vcf.variation.InfoFieldType:1: WARNING: py:class reference target not found: enum.Enum
+suppress_warnings = ["ref"]
 
 # -- Options for HTML output -------------------------------------------------
 
