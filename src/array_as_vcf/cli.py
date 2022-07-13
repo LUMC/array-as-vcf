@@ -10,8 +10,8 @@ aav.cli
 import argparse
 import logging
 
-from .readers import autodetect_reader, OpenArrayReader
 from .lookup import RSLookup
+from .readers import OpenArrayReader, autodetect_reader
 
 
 def get_parser():
@@ -66,7 +66,7 @@ def convert():
 
     logging.info(f"Initialized lookup table with {len(rs_look)} elements.")
 
-    logging.info(f"Start conversion.")
+    logging.info("Start conversion.")
 
     if reader_cls == OpenArrayReader:
         reader = reader_cls(args.path, lookup_table=rs_look,

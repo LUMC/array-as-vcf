@@ -7,7 +7,7 @@ Submodules
 aav.cli module
 --------------
 
-.. automodule:: aav.cli
+.. automodule:: array_as_vcf.cli
     :members:
     :undoc-members:
     :show-inheritance:
@@ -15,7 +15,7 @@ aav.cli module
 aav.lookup module
 -----------------
 
-.. automodule:: aav.lookup
+.. automodule:: array_as_vcf.lookup
     :members:
     :undoc-members:
     :show-inheritance:
@@ -23,7 +23,7 @@ aav.lookup module
 aav.readers module
 ------------------
 
-.. automodule:: aav.readers
+.. automodule:: array_as_vcf.readers
     :members:
     :undoc-members:
     :show-inheritance:
@@ -31,7 +31,7 @@ aav.readers module
 aav.utils module
 ----------------
 
-.. automodule:: aav.utils
+.. automodule:: array_as_vcf.utils
     :members:
     :undoc-members:
     :show-inheritance:
@@ -39,7 +39,7 @@ aav.utils module
 aav.variation module
 --------------------
 
-.. automodule:: aav.variation
+.. automodule:: array_as_vcf.variation
     :members:
     :undoc-members:
     :show-inheritance:
@@ -48,7 +48,7 @@ aav.variation module
 Module contents
 ---------------
 
-.. automodule:: aav
+.. automodule:: array_as_vcf
     :members:
     :undoc-members:
     :show-inheritance:

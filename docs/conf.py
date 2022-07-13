@@ -15,18 +15,26 @@
 # import os
 # import sys
 # sys.path.insert(0, '/home/ahbbollen/KG/aav/aav')
+from distutils.dist import DistributionMetadata
+from pathlib import Path
 
+import pkg_resources
 
 # -- Project information -----------------------------------------------------
 
-project = 'aav'
-copyright = '2018, Author'
-author = 'Author'
+# Get package information from the installed package.
+package = pkg_resources.get_distribution("array_as_vcf")
+metadata_file = Path(package.egg_info) / Path(package.PKG_INFO)
+metadata = DistributionMetadata(path=str(metadata_file))
+
+project = 'array-as-vcf'
+copyright = '2018, Leiden University Medical Center'
+author = 'Leiden University Medical Center'
 
 # The short X.Y version
-version = ''
+version = package.parsed_version.base_version
 # The full version, including alpha/beta/rc tags
-release = ''
+release = package.version
 
 
 # -- General configuration ---------------------------------------------------
@@ -71,6 +79,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
+# Suppress: docstring of array_as_vcf.variation.InfoFieldType:1: WARNING: py:class reference target not found: enum.Enum
+suppress_warnings = ["ref"]
 
 # -- Options for HTML output -------------------------------------------------
 

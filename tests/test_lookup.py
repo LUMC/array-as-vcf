@@ -6,15 +6,14 @@ test_lookup.py
 :copyright: (c) 2018 Leiden University Medical Center
 :license: MIT
 """
-
-import os
 import json
+import os
 from datetime import datetime
+from urllib.error import URLError
+
+from array_as_vcf.lookup import QueryResult, RSLookup, query_ensembl
 
 import pytest
-from requests.exceptions import Timeout
-
-from array_as_vcf.lookup import query_ensembl, RSLookup, QueryResult
 
 
 @pytest.fixture
@@ -56,14 +55,14 @@ def test_query_ensembl_unknown_minor_grch37():
 @pytest.mark.xfail
 def test_query_multi_alt_grch38():
     assert query_ensembl("rs60", "GRCh38") == QueryResult(
-        "A", ["G", "T"], True
+        "A", ["C", "G", "T"], True
     )
 
 
 @pytest.mark.xfail
 def test_query_multi_alt_grch37():
     assert query_ensembl("rs60", "GRCh37") == QueryResult(
-        "A", ["G", "T"], True
+        "A", ["C", "G", "T"], True
     )
 
 
@@ -81,8 +80,9 @@ def test_unknown_rsid():
 
 
 def test_timeout():
-    with pytest.raises(Timeout):
+    with pytest.raises(URLError) as error:
         query_ensembl("rs60", "GRCh37", 0.00001)
+    error.match("timed out")
 
 
 @pytest.mark.xfail

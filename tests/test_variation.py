@@ -7,14 +7,14 @@ test_variation.py
 :license: MIT
 """
 from datetime import date
-import pytest
+
 from array_as_vcf import __version__
 from array_as_vcf.variation import (
-    Variant, InfoField, InfoFieldNumber, Genotype,
-    MetaLine, InfoFieldType, InfoHeaderLine,
-    FormatHeaderLine, date_header, program_header,
-    chrom_header)
+    FormatHeaderLine, Genotype, InfoField, InfoFieldNumber, InfoFieldType,
+    InfoHeaderLine, MetaLine, Variant, chrom_header, date_header,
+    program_header)
 
+import pytest
 
 info_test_data = [
     (

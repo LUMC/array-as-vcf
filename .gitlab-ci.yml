@@ -1,10 +1,6 @@
-image: python:3.6-stretch
+image: python:3.7
 
 build_test:
   script:
-    - apt-get update -y
-    - pip install --upgrade pip setuptools wheel
-    - pip install -r requirements.txt
-    - pip install -r requirements-dev.txt
-    - python setup.py install
-    - tox
+    - pip install tox
+    - tox -e ALL

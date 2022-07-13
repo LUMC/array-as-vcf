@@ -6,22 +6,19 @@ aav.readers
 :copyright: (c) 2018 Leiden University Medical Center
 :license: MIT
 """
-from functools import reduce
-from math import log10
-from typing import Optional, List, Type, Tuple, Set
+import functools
 import logging
+import math
+from typing import List, Optional, Set, Tuple, Type
 
-from .variation import (Variant, InfoFieldNumber, InfoField, Genotype,
-                        InfoHeaderLine, GT_FORMAT, VCF_v_4_2,
-                        program_header, date_header, chrom_header,
-                        InfoFieldType)
 from .lookup import RSLookup
 from .utils import comma_float, empty_string
-
+from .variation import (GT_FORMAT, Genotype, InfoField, InfoFieldNumber,
+                        InfoFieldType, InfoHeaderLine, VCF_v_4_2, Variant,
+                        chrom_header, date_header, program_header)
 
 GRCH37_LOOKUP = RSLookup("GRCh37")
 GRCH38_LOOKUP = RSLookup("GRCh38")
-
 
 logger = logging.getLogger('ArrayReader')
 
@@ -52,7 +49,8 @@ class Reader(object):
         return self
 
     def vcf_header(self, sample_name: str) -> str:
-        s = reduce(lambda x, y: x + str(y) + "\n", self.header_fields, "")
+        s = functools.reduce(
+            lambda x, y: x + str(y) + "\n", self.header_fields, "")
         return s + chrom_header(sample_name) + '\n'
 
 
@@ -392,7 +390,7 @@ class CytoScanReader(Reader):
     def get_qual(self, confidence: float) -> float:
         if confidence == 0:
             return 0
-        return -10 * log10(confidence)
+        return -10 * math.log10(confidence)
 
 
 class LumiReader(Reader):
